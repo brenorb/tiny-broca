@@ -37,10 +37,21 @@ class FrontEndTests(unittest.TestCase):
         self.assertEqual(normalize_text("R$ 4.090,50"), "quatro mil e noventa reais e cinquenta centavos")
         self.assertEqual(normalize_text("R$ 1500"), "mil e quinhentos reais")
         self.assertEqual(normalize_text("15/03/2026"), "quinze de março de dois mil e vinte e seis")
-        self.assertEqual(normalize_text("14:30"), "catorze e meia")
+        self.assertEqual(normalize_text("14:30"), "quatorze e meia")
         self.assertEqual(normalize_text("100%"), "cem por cento")
         self.assertEqual(normalize_text("2,5"), "dois vírgula cinco")
         self.assertEqual(normalize_text("123.456.789-09"), "um dois três, quatro cinco seis, sete oito nove, zero nove")
+
+    def test_decimals_read_brazilian_style(self):
+        # A dot-grouped integer with a comma decimal: the group is part of the
+        # number, so the whole "1.234,56" is one reading.
+        self.assertEqual(normalize_text("1.234,56"), "mil duzentos e trinta e quatro vírgula cinquenta e seis")
+        self.assertEqual(normalize_text("3,14"), "três vírgula quatorze")
+        self.assertEqual(normalize_text("3,05"), "três vírgula zero cinco")
+        self.assertEqual(normalize_text("150,00"), "cento e cinquenta")
+        self.assertEqual(normalize_text("R$ 150,00"), "cento e cinquenta reais")
+        self.assertEqual(normalize_text("R$ 1.234,56"),
+                         "mil duzentos e trinta e quatro reais e cinquenta e seis centavos")
 
     def test_normalisation_unifies_quotes_and_case(self):
         self.assertEqual(normalize_text("“Olá”  ela disse -- ‘não’ (à parte)"),

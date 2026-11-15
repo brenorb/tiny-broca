@@ -106,7 +106,7 @@ def frontend_fingerprint():
 # ---------------------------------------------------------------------------
 
 _UNITS = ("zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito",
-          "nove", "dez", "onze", "doze", "treze", "catorze", "quinze", "dezesseis",
+          "nove", "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis",
           "dezessete", "dezoito", "dezenove")
 _TENS = ("", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta",
          "setenta", "oitenta", "noventa")
@@ -197,7 +197,7 @@ _PERCENT = re.compile(r"\b(\d+(?:[.,]\d+)?)\s?%")
 _DEGREE = re.compile(r"\b(\d+(?:[.,]\d+)?)\s?°")
 _PHONE = re.compile(r"\(\d{2}\)\s?\d{5}-\d{4}")
 _GROUPS = re.compile(r"\b\d{1,3}(?:[.-]\d{1,3}){2,}\b")     # CPF, CNPJ-like, CEP
-_DECIMAL = re.compile(r"\b(\d+)[,](\d{1,2})\b")
+_DECIMAL = re.compile(r"\b(\d{1,3}(?:\.\d{3})*|\d+)[,](\d{1,3})\b")
 _INTEGER = re.compile(r"\b(\d{1,3}(?:\.\d{3})+|\d{1,5})\b")
 _YEAR = re.compile(r"\b(1[0-9]{3}|20\d{2})\b")
 
@@ -206,7 +206,7 @@ def _money(m):
     integer = m.group(1).replace(".", "")
     cents = m.group(2)
     words = number_words(int(integer)) + " real" if int(integer) == 1 else number_words(int(integer)) + " reais"
-    if cents:
+    if cents and int(cents):
         words += " e " + number_words(int(cents)) + (" centavo" if int(cents) == 1 else " centavos")
     return words
 
@@ -246,7 +246,15 @@ def _clock(m):
 
 
 def _decimal(m):
-    return f"{number_words(int(m.group(1)))} vírgula {digits_words(m.group(2))}"
+    integer = int(m.group(1).replace(".", ""))
+    frac = m.group(2)
+    if int(frac) == 0:
+        return number_words(integer)  # "150,00" -> "cento e cinquenta"
+    if len(frac) > 1 and frac[0] == "0":
+        frac_words = digits_words(frac)  # "3,05" -> "zero cinco"
+    else:
+        frac_words = number_words(int(frac))  # "3,14" -> "quatorze"
+    return f"{number_words(integer)} vírgula {frac_words}"
 
 
 def _groups(m):
