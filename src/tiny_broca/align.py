@@ -39,7 +39,7 @@ import numpy as np
 
 from .text import PHONE_SET, PUNCTUATION, SP, UNK, VOICELESS, VOWEL_SET
 
-ALIGNER_MODEL = "facebook/wav2vec2-lv-60-espeak-cv-ft"
+ALIGNER_MODEL = "jonatasgrosman/wav2vec2-xls-r-1b-portuguese"
 ALIGNER_RATE = 16000
 ALIGNER_STRIDE = 320          # samples at 16 kHz: 20 ms
 ALIGNER_CENTER = 200          # a frame's centre: 12.5 ms after its start
