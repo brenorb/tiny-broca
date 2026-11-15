@@ -1,165 +1,212 @@
-"""Generate a new batch of two-voice recordings with the teacher TTS. Cloud only.
+#!/usr/bin/env python
+"""Generate the tiny-broca training audio with Qwen3-TTS (Brazilian Portuguese).
 
-Same recipe as the first batch (release/worker.py in the dataset repository):
-Qwen3-TTS 1.7B Base cloning the two approved VoiceDesign references, batches of
-eight, Whisper small.en screening at 15% normalized WER, one retry, peak
-normalisation to 0.95. Differences: scripts come from a local JSONL, nothing is
-uploaded from here (no token on the machine), and it stops at a budget deadline.
+Every corpus sentence is read by both voices (F1, M1), like the original
+tiny-voca dataset. Generation is resumable (sqlite state in the output dir),
+peak-normalised to 0.95, and quality-checked per clip with faster-whisper
+(int8 on CPU): WER with a number-masking normaliser plus a duration range.
 
-Resumable: every clip is recorded in a SQLite file; rerun the same command.
-Output: <root>/audio/<id>.flac and <root>/manifest.jsonl (accepted clips, in the
-JSONL form tiny_broca.prepare reads), <root>/review.jsonl (rejected clips).
+Write a file named STOP inside the output directory to stop gracefully after
+the current batch; rerun to continue.
+
+Usage:
+    python scripts/generate_audio.py \
+        --corpus data/corpus --refs data/pilot/references \
+        --out data/audio --device mps
 """
 
 import argparse
-import concurrent.futures
 import json
-import os
-from pathlib import Path
+import math
+import re
 import sqlite3
+import sys
 import time
+import unicodedata
+from pathlib import Path
+
 import numpy as np
 import soundfile as sf
 import torch
+from faster_whisper import WhisperModel
+from jiwer import wer
+from qwen_tts import Qwen3TTSModel
 
-MODEL = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
-BATCH = 8
+BASE_MODEL = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
+VOICE_REFS = {"F1": "F1_s11", "M1": "M1_s44"}  # best pilot candidates
+
+_NUMBER_WORDS = {"zero", "um", "uma", "dois", "duas", "três", "tres", "quatro", "cinco",
+                 "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze",
+                 "quatorze", "quince", "dezenove", "vinte", "trinta", "quarenta",
+                 "cinquenta", "sessenta", "setenta", "oitenta", "noventa", "cem", "cento",
+                 "mil", "milhão", "milhao"}
+NUM = re.compile(r"\d+(?:[.,]\d+)*")
+
+
+def normalize_pt(text):
+    """Casefold, strip accents and punctuation, mask numbers and number words.
+
+    Qwen3-TTS speaks numbers correctly but whisper writes them back as digits
+    ("R$12,50"), so a raw word WER would be meaningless; the duration checks
+    cover skipped or added content.
+    """
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    text = text.casefold()
+    text = re.sub(r"r\s?\$\s?", " <num> ", text)
+    text = re.sub(r"%", " <num> ", text)
+    text = NUM.sub(" <num> ", text)
+    text = re.sub(r"[^\w\s]", " ", text)
+    words = [w for w in text.split() if not w.startswith("<") and w not in _NUMBER_WORDS
+             and w.rstrip("s") not in _NUMBER_WORDS]
+    return " ".join(words).strip()
+
+
+def load_corpus(corpus_dir: Path):
+    import pyarrow.parquet as pq
+
+    sentences = []
+    for batch in (1, 2):
+        for path in sorted(corpus_dir.glob(f"batch{batch}/*.parquet")):
+            table = pq.read_table(path)
+            for i, (text, source) in enumerate(zip(table.column("text").to_pylist(),
+                                                   table.column("source").to_pylist())):
+                sentences.append({"batch": batch, "split": path.stem,
+                                  "index": i, "text": text, "source": source})
+    return sentences
+
+
+def open_db(path: Path) -> sqlite3.Connection:
+    conn = sqlite3.connect(path)
+    conn.execute("""CREATE TABLE IF NOT EXISTS clips (
+        clip_id TEXT PRIMARY KEY, voice TEXT, batch INTEGER, split TEXT,
+        text TEXT, seconds REAL, sr INTEGER, gen_seconds REAL, rtf REAL,
+        wer REAL, transcript TEXT, status TEXT)""")
+    conn.execute("CREATE INDEX IF NOT EXISTS clips_status ON clips(status)")
+    return conn
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--scripts", type=Path, required=True)
-    parser.add_argument("--root", type=Path, required=True)
-    parser.add_argument("--references", type=Path, required=True, help="Directory with F2.wav, M2.wav")
-    parser.add_argument("--voices", type=Path, required=True, help="voices.json of the first batch")
-    parser.add_argument("--deadline-file", type=Path)
-    parser.add_argument("--deadline-margin", type=float, default=600)
-    parser.add_argument("--limit", type=int, help="Only the first N scripts (smoke test)")
-    parser.add_argument("--seed", type=int, default=20261114)
-    args = parser.parse_args()
-    from faster_whisper import WhisperModel
-    from jiwer import wer
-    from qwen_tts import Qwen3TTSModel
-    from scipy.signal import resample_poly
-    from transformers.models.whisper.english_normalizer import EnglishTextNormalizer
-    audio = args.root / "audio"
-    audio.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(args.root / "state.sqlite")
-    db.execute("CREATE TABLE IF NOT EXISTS clips(id TEXT PRIMARY KEY, status TEXT, attempts INTEGER, payload TEXT)")
-    db.commit()
-    rows = [json.loads(line) for line in args.scripts.read_text(encoding="utf-8").splitlines() if line.strip()]
-    rows = sorted(rows, key=lambda r: (r["character_count"], r["id"]))[:args.limit]
-    jobs = [{"id": f"{row['id']}_{voice}", "voice": voice, "row": row} for row in rows for voice in ("F2", "M2")]
-    references = json.loads(args.voices.read_text())
-    started = time.time()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--corpus", type=Path, default=Path("data/corpus"))
+    ap.add_argument("--refs", type=Path, default=Path("data/pilot/references"))
+    ap.add_argument("--out", type=Path, default=Path("data/audio"))
+    ap.add_argument("--device", default="mps")
+    ap.add_argument("--threads", type=int, default=12)
+    ap.add_argument("--batch", type=int, default=8)
+    ap.add_argument("--seed", type=int, default=20261117)
+    args = ap.parse_args()
 
-    def out_of_time():
-        if (args.root / "STOP").exists():
-            return True
-        if not args.deadline_file:
-            return False
-        try:
-            return time.time() >= json.loads(args.deadline_file.read_text())["deadline"] - args.deadline_margin
-        except (OSError, ValueError, KeyError):
-            return False
+    args.out.mkdir(parents=True, exist_ok=True)
+    torch.set_num_threads(args.threads)
 
-    def report(stage):
-        counts = dict(db.execute("SELECT status, count(*) FROM clips GROUP BY status").fetchall())
-        hours = sum(json.loads(p)["duration_seconds"] for (p,) in db.execute("SELECT payload FROM clips WHERE status='accepted'")) / 3600
-        value = {"stage": stage, "target_clips": len(jobs), "counts": counts, "accepted_audio_hours": round(hours, 3),
-                 "elapsed_seconds_this_run": round(time.time() - started), "updated": time.time()}
-        temporary = args.root / "progress.json.tmp"
-        temporary.write_text(json.dumps(value, indent=2))
-        os.replace(temporary, args.root / "progress.json")
-        print(json.dumps(value), flush=True)
+    refs = json.loads((args.refs / "voices.json").read_text())
+    sentences = load_corpus(args.corpus)
+    print(f"corpus: {len(sentences)} sentences", flush=True)
 
-    torch.set_num_threads(6)
-    model = Qwen3TTSModel.from_pretrained(MODEL, device_map="cuda:0", dtype=torch.bfloat16, attn_implementation="sdpa")
-    prompts = {v: model.create_voice_clone_prompt(ref_audio=str(args.references / f"{v}.wav"), ref_text=references[v]["text"],
-                                                  x_vector_only_mode=False)[0] for v in ("F2", "M2")}
-    asr = WhisperModel("small.en", device="cpu", compute_type="int8", cpu_threads=6)
-    normalize = EnglishTextNormalizer({"cancelled": "canceled", "colour": "color", "favourite": "favorite", "centre": "center"})
-    pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-    futures = []
+    print("loading whisper small ...", flush=True)
+    asr = WhisperModel("small", device="cpu", compute_type="int8", cpu_threads=args.threads)
 
-    def analyze(batch, waves, rate, attempt, seed, batch_id, seconds):
-        records = []
-        for job, wave in zip(batch, waves):
-            row, w = job["row"], np.asarray(wave)
-            duration, peak, reasons = len(w) / rate, float(np.max(np.abs(w))) if len(w) else 0.0, []
-            if not np.isfinite(w).all() or peak < 1e-5:
-                reasons.append("invalid_or_silent_audio")
-            if duration < 0.5 or duration > 35:
-                reasons.append("duration")
-            if duration > 0 and not 0.5 <= row["word_count"] / duration <= 7:
-                reasons.append("speaking_rate")
-            if len(w) and float(np.mean(np.abs(w) < 1e-4)) > 0.8:
-                reasons.append("excessive_silence")
-            transcript, error = "", 1.0
-            if not reasons:
-                segments, _ = asr.transcribe(resample_poly(w.astype("float32"), 2, 3), language="en", beam_size=3, condition_on_previous_text=False)
-                transcript = " ".join(s.text.strip() for s in segments)
-                error = wer(normalize(row["text"]), normalize(transcript) or "<empty>")
-                if error > 0.15:
-                    reasons.append("asr_mismatch")
-            if np.isfinite(w).all() and peak > 0:
-                sf.write(audio / (job["id"] + ".flac"), w * (0.95 / peak), rate, subtype="PCM_16")
-            payload = {"id": job["id"], "text_id": row["id"], "voice_id": job["voice"], "text": row["text"], "split": row["split"],
-                       "category": row["category"], "origin": row["origin"], "source_id": row["source_id"],
-                       "source_license": row["source_license"], "source_url": row["source_url"], "teacher_model": MODEL,
-                       "reference_audio": job["voice"] + ".wav", "audio": f"audio/{job['id']}.flac", "duration_seconds": round(duration, 3),
-                       "generation_seed": seed, "generation_batch": batch_id, "attempt": attempt, "generation_seconds": seconds,
-                       "asr_transcript": transcript, "normalized_wer": round(float(error), 4), "review_reasons": reasons}
-            records.append((job["id"], "review" if reasons else "accepted", attempt, json.dumps(payload)))
-        return records
+    def transcribe(path):
+        import librosa
+        wave, rate = sf.read(str(path), dtype="float32")
+        if rate != 16000:
+            wave = librosa.resample(wave, orig_sr=rate, target_sr=16000)
+        segments, _ = asr.transcribe(wave, language="pt", beam_size=1, vad_filter=False)
+        return " ".join(s.text for s in segments)
 
-    def collect(future):
-        records = future.result()
-        db.executemany("INSERT INTO clips(id, status, attempts, payload) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET "
-                       "status=excluded.status, attempts=excluded.attempts, payload=excluded.payload", records)
-        db.commit()
+    print("loading Qwen3-TTS Base ...", flush=True)
+    base = Qwen3TTSModel.from_pretrained(BASE_MODEL, device_map=args.device,
+                                         dtype=torch.bfloat16, attn_implementation="sdpa")
+    prompts = {}
+    for voice, ref_tag in VOICE_REFS.items():
+        prompts[voice] = base.create_voice_clone_prompt(
+            ref_audio=str(args.refs / f"{ref_tag}.wav"),
+            ref_text=refs[ref_tag]["text"], x_vector_only_mode=False)
+        print(f"voice {voice} <- {ref_tag}.wav", flush=True)
 
-    def generate(batch, attempt, batch_id):
-        seed = args.seed + batch_id + attempt * 100000
-        torch.manual_seed(seed)
-        start = time.time()
-        try:
-            waves, rate = model.generate_voice_clone(text=[j["row"]["text"] for j in batch], language=["English"] * len(batch),
-                                                     voice_clone_prompt=[prompts[j["voice"]] for j in batch], max_new_tokens=600)
-        except torch.cuda.OutOfMemoryError:
-            torch.cuda.empty_cache()
-            if len(batch) == 1:
-                raise
-            middle = len(batch) // 2
-            generate(batch[:middle], attempt, batch_id)
-            generate(batch[middle:], attempt, batch_id + 50000)
-            return
-        futures.append(pool.submit(analyze, batch, waves, rate, attempt, seed, batch_id, round(time.time() - start, 3)))
-        if len(futures) >= 2:
-            collect(futures.pop(0))
+    conn = open_db(args.out / "state.db")
+    done = {r[0] for r in conn.execute(
+        "SELECT clip_id FROM clips WHERE status='ok'")}
+    jobs = []
+    for voice in VOICE_REFS:
+        for s in sentences:
+            cid = f"b{s['batch']}_{voice}_{s['index']:05d}"
+            if cid not in done:
+                jobs.append((voice, cid, s))
+    print(f"to generate: {len(jobs)} clips "
+          f"({sum(1 for j in jobs if j[0] == 'F1')} F1, "
+          f"{sum(1 for j in jobs if j[0] == 'M1')} M1)", flush=True)
 
-    stopped = False
-    for attempt in (1, 2):
-        existing = {uid: (status, n) for uid, status, n in db.execute("SELECT id, status, attempts FROM clips")}
-        pending = [j for j in jobs if (attempt == 1 and j["id"] not in existing)
-                   or (attempt == 2 and j["id"] in existing and existing[j["id"]][0] == "review" and existing[j["id"]][1] < 2)]
-        size = BATCH if attempt == 1 else 1
-        for start in range(0, len(pending), size):
-            if out_of_time():
-                stopped = True
-                break
-            generate(pending[start:start + size], attempt, start // BATCH if attempt == 1 else start + 20000)
-            if (start // size) % 16 == 15:
-                report("generating")
-        while futures:
-            collect(futures.pop(0))
-        if stopped:
-            break
-    pool.shutdown(wait=True)
-    accepted = [json.loads(p) for (p,) in db.execute("SELECT payload FROM clips WHERE status='accepted' ORDER BY id")]
-    (args.root / "manifest.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in accepted), encoding="utf-8")
-    (args.root / "review.jsonl").write_text("".join(p + "\n" for (p,) in db.execute("SELECT payload FROM clips WHERE status!='accepted' ORDER BY id")), encoding="utf-8")
-    report("paused" if stopped else "complete")
+    audio_dir = args.out / "audio"
+    audio_dir.mkdir(exist_ok=True)
+    t_start = time.time()
+    n_ok = n_bad = 0
+    wers, rtfs = [], []
+
+    # Group remaining jobs by voice into batches.
+    per_voice = {v: [j for j in jobs if j[0] == v] for v in VOICE_REFS}
+    for voice, vjobs in per_voice.items():
+        prompt = prompts[voice]
+        for b0 in range(0, len(vjobs), args.batch):
+            if (args.out / "STOP").exists():
+                print("STOP file present, exiting", flush=True)
+                return
+            chunk = vjobs[b0:b0 + args.batch]
+            t0 = time.time()
+            wavs, sr = base.generate_voice_clone(
+                text=[s["text"] for _, _, s in chunk],
+                language=["Portuguese"] * len(chunk),
+                voice_clone_prompt=prompt, max_new_tokens=600,
+                seed=args.seed + b0)
+            gen = time.time() - t0
+            for (v, cid, s), wave in zip(chunk, wavs):
+                wave = np.asarray(wave, dtype=np.float32)
+                seconds = len(wave) / sr
+                peak = float(np.abs(wave).max())
+                if peak > 1e-9:
+                    wave = wave / peak * 0.95
+                path = audio_dir / f"{cid}.flac"
+                sf.write(path, wave, sr)
+                transcript = transcribe(path)
+                w = wer(normalize_pt(s["text"]), normalize_pt(transcript)) if transcript else 1.0
+                ok = (0.5 <= seconds <= 35.0) and (w < 0.5) and transcript
+                conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                             (cid, voice, s["batch"], s["split"], s["text"],
+                              round(seconds, 3), sr, round(gen / len(chunk), 2),
+                              round(gen / len(chunk) / max(seconds, 1e-9), 3),
+                              round(w, 4), transcript, "ok" if ok else "bad"))
+                conn.commit()
+                if ok:
+                    n_ok += 1
+                    wers.append(w)
+                    rtfs.append(gen / len(chunk) / max(seconds, 1e-9))
+                else:
+                    n_bad += 1
+                    print(f"  BAD {cid}: {seconds:.1f}s WER {w:.2f}", flush=True)
+            done_n = n_ok + n_bad
+            if done_n % 50 == 0 or b0 + args.batch >= len(vjobs):
+                (args.out / "progress.json").write_text(json.dumps({
+                    "done": done_n, "ok": n_ok, "bad": n_bad,
+                    "wer_mean": round(float(np.mean(wers)), 4) if wers else None,
+                    "rtf_mean": round(float(np.mean(rtfs)), 3) if rtfs else None,
+                    "elapsed_min": round((time.time() - t_start) / 60, 1),
+                    "eta_h": round((time.time() - t_start) / max(done_n, 1)
+                                   * max(len(jobs) - done_n, 0) / 3600, 2)}))
+                print(f"voice {voice} batch {b0 // args.batch + 1}: "
+                      f"total {done_n} (bad {n_bad}), "
+                      f"WER {np.mean(wers) if wers else 0:.1%}, "
+                      f"RTF {np.mean(rtfs) if rtfs else 0:.2f}, "
+                      f"ETA {json.loads((args.out / 'progress.json').read_text())['eta_h']}h",
+                      flush=True)
+
+    hours = sum(r[0] for r in conn.execute(
+        'SELECT seconds FROM clips WHERE status="ok"')) / 3600
+    conn.close()
+    print(json.dumps({"ok": n_ok, "bad": n_bad,
+                      "wer_mean": round(float(np.mean(wers)), 4) if wers else None,
+                      "rtf_mean": round(float(np.mean(rtfs)), 3) if rtfs else None,
+                      "hours_audio": round(hours, 2)}))
 
 
 if __name__ == "__main__":
