@@ -1,29 +1,33 @@
-"""Offline phoneme-level forced alignment. Annotation time only.
+"""Offline character-level forced alignment. Annotation time only.
 
-A pretrained multilingual phoneme recogniser (wav2vec 2.0 fine-tuned with CTC on
-eSpeak phoneme labels, ``facebook/wav2vec2-lv-60-espeak-cv-ft``) labels the
-existing recordings. It is used ONLY to annotate training data: none of its
-weights, features or outputs enter the TTS model, which never sees it.
+A pretrained Portuguese recogniser (wav2vec 2.0 fine-tuned with CTC on written
+letters, ``jonatasgrosman/wav2vec2-xls-r-1b-portuguese``, Apache-2.0, trained
+on Common Voice Portuguese) labels the existing recordings. It is used ONLY to
+annotate training data: none of its weights, features or outputs enter the TTS
+model, which never sees it.
 
-Why this replaces the learned Gaussian aligner: that objective normalised scores
-over the token positions of one utterance, so a frequent token whose key matched
-the average spectrum (first BOS, later the word spaces) won the softmax on most
-frames and every other token was left with single frames. Here each frame is
-scored against phoneme classes shared by the whole language, and the transcript
-only constrains their order.
+The English original aligned eSpeak phonemes with a multilingual recogniser
+(``facebook/wav2vec2-lv-60-espeak-cv-ft``). Portuguese has no permissive
+phoneme-level equivalent: that recogniser emits English-flavoured labels for
+Portuguese speech (it was fine-tuned on English-centric data), and no copyleft
+Portuguese pronouncing dictionary exists to build a phoneme inventory from.
+Portuguese written letters, however, have a clean multilingual CTC model, and
+the front end is character-based, so the letter alphabet is the alignment
+inventory. Each frame is scored against letter classes shared by the whole
+language, and the transcript only constrains their order.
 
 Per utterance:
-1. CTC Viterbi alignment of the eSpeak phoneme sequence (20 ms frames).
-2. This recogniser emits a label once, at the START of the phone (measured on
-   our recordings against pitch-tracker voicing flips: a phone begins about
-   19 ms before the start of its first emission frame, for both voices; see
-   ``scripts/calibrate_aligner_timing.py``). A phone therefore lasts from its
-   own onset to the next phone's onset.
+1. CTC Viterbi alignment of the letter sequence (20 ms frames).
+2. The recogniser emits a label once, at the START of the letter's sound (the
+   English original calibrated an onset offset of about 19 ms on its own
+   recordings; the same offset is carried over here and the quality metrics
+   in ``quality()`` are the check that it still fits). A letter therefore
+   lasts from its own onset to the next letter's onset.
 3. Silence is found from signal energy at acoustic resolution and given to the
    explicit pause-capable token at that position (BOS, EOS, punctuation, word
    boundary). Tokens without a pause get zero frames.
 4. Durations are counted on the acoustic frame grid, so they sum to the frame
-   count exactly and every phoneme has at least one frame.
+   count exactly and every letter has at least one frame.
 
 ``refine.py`` can then sharpen the boundaries with a classifier trained from
 scratch on these labels.
