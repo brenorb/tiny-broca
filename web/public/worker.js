@@ -1,10 +1,12 @@
-// Runs the phonemizer (dizione, through Pyodide) and the model (ONNX Runtime Web)
-// off the main thread. Messages in: {type: "load"} and {type: "speak", id, text,
-// voice, speed}. Messages out: status, ready, sentence, done, error.
+// Runs the front end (tiny_broca.text, through Pyodide) and the model (ONNX
+// Runtime Web) off the main thread. The same Python module the training and
+// annotation pipelines use, so the browser speaks exactly what they did.
+// Messages in: {type: "load"} and {type: "speak", id, text, voice, speed}.
+// Messages out: status, ready, sentence, done, error.
 
 const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
 const ORT = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
-const DATA = ["lexicon.tsv", "align.json", "g2p.json", "g2p.npz", "homographs.json"];
+const DATA = ["text.py"];
 
 importScripts(PYODIDE + "pyodide.js", ORT + "ort.wasm.min.js");
 
@@ -50,29 +52,20 @@ async function fetchBytes(url, label) {
   return bytes;
 }
 
-async function loadPhonemizer() {
-  status("Loading the phonemizer");
+async function loadFrontEnd() {
+  status("Loading the front end");
   pyodide = await loadPyodide({ indexURL: PYODIDE });
-  await pyodide.loadPackage("numpy");
-  const [source, ...files] = await Promise.all([
-    download("assets/dizione.zip", "Loading the phonemizer"),
-    ...DATA.map((name) => download("assets/phonemizer/" + name, "Loading the dictionary")),
-  ]);
-  status("Starting the phonemizer");
-  pyodide.FS.mkdirTree("/dizione-data");
-  DATA.forEach((name, index) => pyodide.FS.writeFile("/dizione-data/" + name, files[index]));
-  pyodide.unpackArchive(source.buffer, "zip", { extractDir: "/dizione-src" });
+  const source = await Promise.all(DATA.map((name) => download("assets/" + name, "Loading the front end")));
+  status("Starting the front end");
+  pyodide.runPython(new TextDecoder().decode(source[0]));
   pyodide.runPython(`
-import json, os, sys
-os.environ["DIZIONE_DATA"] = "/dizione-data"
-sys.path.insert(0, "/dizione-src")
-import dizione
+import json
 
 def phonemize_json(text):
-    result = dizione.phonemize(text)
-    return json.dumps({"ids": list(result.ids), "stress": list(result.stress), "text": str(result)})
+    result = phonemize(text)
+    return json.dumps({"ids": list(result.ids), "stress": list(result.stress), "text": " ".join(result.symbols)})
 
-phonemize_json("Warm up.")
+phonemize_json("Olá.")
 `);
   phonemize = pyodide.globals.get("phonemize_json");
 }
@@ -153,7 +146,7 @@ async function speak({ id, text, voice, speed }) {
 onmessage = async ({ data }) => {
   try {
     if (data.type === "load") {
-      await Promise.all([loadPhonemizer(), loadModel()]);
+      await Promise.all([loadFrontEnd(), loadModel()]);
       postMessage({ type: "ready", voices: config.voices });
     } else if (data.type === "speak") {
       await speak(data);

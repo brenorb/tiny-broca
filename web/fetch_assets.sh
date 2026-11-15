@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # Fetch the files the demo serves into public/assets (they are not stored in git).
 #
-#   bash fetch_assets.sh /path/to/dizione
+#   bash fetch_assets.sh /path/to/tiny-broca
 #
-# Downloads the ONNX model, its config and the phonemizer data from the Hugging
-# Face repository, and zips the dizione package for Pyodide. While the model
-# repository is private, the token of the logged-in Hugging Face user is used.
+# Downloads the ONNX model and its config from the Hugging Face repository and
+# copies the front end module (the browser runs the exact Python code the
+# training and annotation pipelines use). While the model repository is
+# private, the token of the logged-in Hugging Face user is used.
 set -euo pipefail
 cd "$(dirname "$0")"
-DIZIONE="${1:?path to the dizione repository}"
-BASE="https://huggingface.co/n4ze3m/tiny-broca/resolve/main"
+REPO="${1:?path to the tiny-broca repository}"
+BASE="https://huggingface.co/brenorb/tiny-broca/resolve/main"
 TOKEN_FILE="${HF_TOKEN_PATH:-$HOME/.cache/huggingface/token}"
-mkdir -p public/assets/phonemizer
+mkdir -p public/assets
 get() {
   if [ -f "$TOKEN_FILE" ]; then
     curl -fsSL -H "Authorization: Bearer $(cat "$TOKEN_FILE")" -o "$2" "$BASE/$1"
@@ -21,9 +22,5 @@ get() {
 }
 get onnx/model.onnx public/assets/model.onnx
 get config.json public/assets/config.json
-for name in lexicon.tsv align.json g2p.json g2p.npz homographs.json LICENSE.cmudict LICENSE.homograph-data; do
-  get "phonemizer/$name" "public/assets/phonemizer/$name"
-done
-rm -f public/assets/dizione.zip
-(cd "$DIZIONE/src" && zip -q -r - dizione -x '*/__pycache__/*' '*.pyc' '*/.DS_Store' '*/built/*') > public/assets/dizione.zip
-ls -l public/assets public/assets/phonemizer
+cp "$REPO/src/tiny_broca/text.py" public/assets/text.py
+ls -l public/assets

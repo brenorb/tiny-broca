@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>tiny-broca</title>
-<meta name="description" content="tiny-broca is a 4.5M-parameter English text-to-speech model. This page runs it in your browser.">
+<meta name="description" content="tiny-broca é um modelo de texto-para-fala brasileiro com 4,5M de parâmetros e duas vozes. Esta página o roda no seu navegador.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23171512'/%3E%3Cpath d='M8 13v6M12 9v14M16 12v8M20 7v18M24 13v6' stroke='%23f4efe6' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
   :root {
@@ -75,63 +75,62 @@
 <main>
   <header>
     <h1>tiny-broca</h1>
-    <p>A <strong>4.5M-parameter</strong> English text-to-speech model with two voices, trained from scratch.
-       This page runs it in your browser: nothing you type leaves your device.</p>
+    <p>Um modelo de <strong>texto-para-fala</strong> em português brasileiro com 4,5M de parâmetros e duas vozes,
+       treinado do zero. Esta página o roda no seu navegador: nada do que você digitar sai do seu dispositivo.</p>
   </header>
 
   <section class="panel">
-    <textarea id="text" spellcheck="false" aria-label="Text to speak">Hello! This is tiny broca, a small text to speech model running entirely in your browser.</textarea>
+    <textarea id="text" spellcheck="false" aria-label="Texto para falar">Olá! Eu sou a tiny broca, um pequeno modelo de texto-para-fala rodando inteiramente no seu navegador.</textarea>
     <div class="examples" id="examples"></div>
     <div class="controls">
-      <div class="voices" role="radiogroup" aria-label="Voice">
-        <label><input type="radio" name="voice" value="0" checked><span>F2</span></label>
-        <label><input type="radio" name="voice" value="1"><span>M2</span></label>
+      <div class="voices" role="radiogroup" aria-label="Voz">
+        <label><input type="radio" name="voice" value="0" checked><span>F1</span></label>
+        <label><input type="radio" name="voice" value="1"><span>M1</span></label>
       </div>
-      <label class="speed">Speed <input id="speed" type="range" min="0.7" max="1.4" step="0.05" value="1"><output id="speed-value">1.00</output></label>
-      <button id="speak" disabled>Speak</button>
+      <label class="speed">Velocidade <input id="speed" type="range" min="0.7" max="1.4" step="0.05" value="1"><output id="speed-value">1.00</output></label>
+      <button id="speak" disabled>Falar</button>
     </div>
   </section>
 
-  <div class="status" id="status" role="status">Loading…</div>
+  <div class="status" id="status" role="status">Carregando…</div>
   <div class="bar" id="bar"><i></i></div>
 
   <section class="result" id="result" hidden>
     <audio id="audio" controls></audio>
     <dl>
-      <div><dt>Audio</dt><dd id="m-audio">–</dd></div>
-      <div><dt>Time to generate</dt><dd id="m-time">–</dd></div>
-      <div><dt>Speed</dt><dd id="m-speed">–</dd></div>
-      <div><dt>Text to phonemes</dt><dd id="m-phonemes">–</dd></div>
+      <div><dt>Áudio</dt><dd id="m-audio">–</dd></div>
+      <div><dt>Tempo de geração</dt><dd id="m-time">–</dd></div>
+      <div><dt>Velocidade</dt><dd id="m-speed">–</dd></div>
+      <div><dt>Texto para letras</dt><dd id="m-phonemes">–</dd></div>
     </dl>
-    <details><summary>Phonemes</summary><pre id="phonemes"></pre></details>
+    <details><summary>Letras</summary><pre id="phonemes"></pre></details>
   </section>
 
   <section class="facts">
-    <div><b>4,537,291</b><span>parameters, waveform generator included</span></div>
-    <div><b>21 MB</b><span>model file (ONNX, float32)</span></div>
-    <div><b>24 kHz</b><span>mono output</span></div>
-    <div><b>2 voices</b><span>F2 and M2, American English</span></div>
-    <div><b>17.6 hours</b><span>of synthetic training speech</span></div>
-    <div><b>Apache-2.0</b><span>code and weights</span></div>
+    <div><b>4.533.835</b><span>parâmetros, gerador de onda incluído</span></div>
+    <div><b>21 MB</b><span>arquivo do modelo (ONNX, float32)</span></div>
+    <div><b>24 kHz</b><span>saída mono</span></div>
+    <div><b>2 vozes</b><span>F1 e M1, português brasileiro</span></div>
+    <div><b>19 horas</b><span>de fala sintética de treino</span></div>
+    <div><b>Apache-2.0</b><span>código e pesos</span></div>
   </section>
 
   <footer>
-    <a href="https://github.com/n4ze3m/tiny-broca">Code</a>
-    <a href="https://huggingface.co/n4ze3m/tiny-broca">Weights</a>
-    <a href="https://huggingface.co/datasets/n4ze3m/tiny-broca">Dataset</a>
-    <a href="https://github.com/n4ze3m/dizione">Phonemizer</a>
-    <p>The first visit downloads about 40 MB: the model, the pronunciation dictionary and a Python runtime for the
-       phonemizer. English only. Foreign names and unusual spellings are often mispronounced.</p>
+    <a href="https://github.com/brenorb/tiny-broca">Código</a>
+    <a href="https://huggingface.co/brenorb/tiny-broca">Pesos</a>
+    <a href="https://huggingface.co/datasets/brenorb/tiny-broca">Dataset</a>
+    <p>A primeira visita baixa cerca de 35 MB: o modelo e um runtime Python para o front end. Somente português
+       brasileiro; nomes estrangeiros e ortografias incomuns podem ser lidos de forma imperfeita.</p>
   </footer>
 </main>
 
 <script>
 const EXAMPLES = [
-  ["Greeting", "Hello! This is tiny broca, a small text to speech model running entirely in your browser."],
-  ["Numbers", "The meeting moved to 3:30 pm on March 14th, so we have about 45 minutes left. It costs $12.99."],
-  ["Question", "Did you really think I would forget your birthday? Of course not!"],
-  ["Story", "She had never seen the sea before, and for a long while she stood at the edge of the water without saying a word."],
-  ["Homographs", "I read the book you read yesterday. They live near the live music hall."],
+  ["Saudação", "Olá! Eu sou a tiny broca, um pequeno modelo de texto-para-fala rodando inteiramente no seu navegador."],
+  ["Datas e horas", "A reunião mudou para as 15h30 de 14/03, então ainda sobram uns 45 minutos."],
+  ["Dinheiro", "O ingresso para o show custa R$ 150,00, e sai mais barato comprado online."],
+  ["Pergunta", "Você realmente achou que eu ia esquecer o seu aniversário? Claro que não!"],
+  ["História", "Ela nunca tinha visto o mar antes, e por um bom tempo ficou na beira da água sem dizer uma palavra."],
 ];
 const $ = (id) => document.getElementById(id);
 const worker = new Worker("worker.js");
@@ -168,10 +167,10 @@ function wav(samples, rate) {
 let phonemes = [];
 worker.onmessage = ({ data }) => {
   if (data.type === "status") setStatus(data.text, data.progress);
-  else if (data.type === "ready") { ready = true; setStatus("Ready."); update(); }
+  else if (data.type === "ready") { ready = true; setStatus("Pronto."); update(); }
   else if (data.type === "sentence" && data.id === request) {
     phonemes.push(data.phonemes);
-    setStatus(`Speaking sentence ${data.index + 1} of ${data.total}`, (data.index + 1) / data.total);
+    setStatus(`Falando a frase ${data.index + 1} de ${data.total}`, (data.index + 1) / data.total);
   } else if (data.type === "done" && data.id === request) {
     busy = false; update();
     const seconds = data.audio.length / data.sampleRate;
@@ -181,22 +180,22 @@ worker.onmessage = ({ data }) => {
     $("audio").play().catch(() => {});
     $("m-audio").textContent = seconds.toFixed(1) + " s";
     $("m-time").textContent = (data.totalTime / 1000).toFixed(2) + " s";
-    $("m-speed").textContent = (seconds / (data.totalTime / 1000)).toFixed(1) + "× real time";
+    $("m-speed").textContent = (seconds / (data.totalTime / 1000)).toFixed(1) + "× o tempo real";
     $("m-phonemes").textContent = Math.round(data.phonemeTime) + " ms";
     $("phonemes").textContent = phonemes.join("\n");
     $("result").hidden = false;
-    setStatus("Done.");
+    setStatus("Concluído.");
   } else if (data.type === "error") {
     busy = false; update();
-    setStatus("Something went wrong: " + data.message);
+    setStatus("Algo deu errado: " + data.message);
   }
 };
-worker.onerror = (event) => setStatus("Could not start: " + event.message);
+worker.onerror = (event) => setStatus("Não foi possível começar: " + event.message);
 
 $("speak").onclick = () => {
   busy = true; update(); phonemes = [];
   request += 1;
-  setStatus("Speaking…", 0);
+  setStatus("Falando…", 0);
   worker.postMessage({ type: "speak", id: request, text: $("text").value,
                        voice: Number(document.querySelector("input[name=voice]:checked").value), speed: Number($("speed").value) });
 };
@@ -204,7 +203,7 @@ $("text").addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && !$("speak").disabled) $("speak").click();
 });
 
-setStatus("Loading the model and the phonemizer…");
+setStatus("Carregando o modelo e o front end…");
 worker.postMessage({ type: "load" });
 </script>
 </body>
