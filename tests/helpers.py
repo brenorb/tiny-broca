@@ -15,11 +15,11 @@ def small_config():
                   predictor_channels=16, cep_causal=12, cep_anti=4, noise_cep=8, max_frames=400)
 
 
-SYMBOLS = ("<bos>", "h", "ə", "l", "oʊ", "<sp>", "w", "ɜː", "l", "d", ".", "<eos>")
-STRESS = (0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0)
+SYMBOLS = ("<bos>", "m", "e", "u", "<sp>", "c", "a", "f", "é", ".", "<eos>")
+STRESS = (0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0)
 
 
-def sample(c, voice=0, durations=(3, 4, 5, 4, 9, 0, 4, 10, 5, 4, 0, 6)):
+def sample(c, voice=0, durations=(3, 4, 5, 9, 0, 4, 10, 5, 4, 0, 6)):
     frames = sum(durations)
     time = torch.arange(frames * c.hop) / c.sample_rate
     pitch = 0.2 * torch.sin(torch.linspace(0, 3, frames)) - (0.6 if voice else 0.0)
@@ -40,8 +40,8 @@ def write_annotations(root, c, split, count=4, complete=True, annotation="test-a
     annotations.mkdir(exist_ok=True)
     rows = []
     for i in range(count):
-        item = sample(c, voice=i % 2, durations=(3 + i, 4, 5, 4, 9, i % 2, 4, 10, 5, 4, 0, 6))
-        text = f"hello world {split} {i // 2}."
+        item = sample(c, voice=i % 2, durations=(3 + i, 4, 5, 9, i % 2, 4, 10, 5, 4, 0, 6))
+        text = f"meu café {split} {i // 2}."
         path = f"{split}/{split}{i}.pt"
         torch.save({"wave": item["wave"], "mel": item["mel"], "speaker": item["speaker"],
                     "prosody": torch.stack((item["prosody"][:, 0] * item["prosody"][:, 1], item["prosody"][:, 1],
