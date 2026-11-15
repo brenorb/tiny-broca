@@ -170,7 +170,7 @@ def main():
                 sf.write(path, wave, sr)
                 transcript = transcribe(path)
                 w = wer(normalize_pt(s["text"]), normalize_pt(transcript)) if transcript else 1.0
-                ok = (0.5 <= seconds <= 35.0) and (w < 0.5) and transcript
+                ok = (0.5 <= seconds <= 35.0) and (w < 0.15) and transcript
                 conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                              (cid, voice, s["batch"], s["split"], s["text"],
                               round(seconds, 3), sr, round(gen / len(chunk), 2),
@@ -200,6 +200,48 @@ def main():
                       f"ETA {json.loads((args.out / 'progress.json').read_text())['eta_h']}h",
                       flush=True)
 
+    # Clips that failed the gate get one regeneration with a different seed;
+    # clips that fail twice are left out and listed in review.jsonl.
+    jobs_by_cid = {j[1]: j for j in jobs}
+    bad = [r for r in conn.execute('SELECT clip_id, voice FROM clips WHERE status="bad"')
+           if r[0] in jobs_by_cid]
+    for voice in VOICE_REFS:
+        vbad = [(cid, jobs_by_cid[cid][2]) for cid, v in bad if v == voice]
+        for b0 in range(0, len(vbad), args.batch):
+            if (args.out / "STOP").exists():
+                print("STOP file present, exiting", flush=True)
+                return
+            chunk = vbad[b0:b0 + args.batch]
+            t0 = time.time()
+            wavs, sr = base.generate_voice_clone(
+                text=[s["text"] for _, s in chunk],
+                language=["Portuguese"] * len(chunk),
+                voice_clone_prompt=prompts[voice], max_new_tokens=600,
+                seed=args.seed + 7919 + b0)
+            gen = time.time() - t0
+            for (cid, s), wave in zip(chunk, wavs):
+                wave = np.asarray(wave, dtype=np.float32)
+                seconds = len(wave) / sr
+                peak = float(np.abs(wave).max())
+                if peak > 1e-9:
+                    wave = wave / peak * 0.95
+                path = audio_dir / f"{cid}.flac"
+                sf.write(path, wave, sr)
+                transcript = transcribe(path)
+                w = wer(normalize_pt(s["text"]), normalize_pt(transcript)) if transcript else 1.0
+                ok = (0.5 <= seconds <= 35.0) and (w < 0.15) and transcript
+                conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                             (cid, voice, s["batch"], s["split"], s["text"],
+                              round(seconds, 3), sr, round(gen / len(chunk), 2),
+                              round(gen / len(chunk) / max(seconds, 1e-9), 3),
+                              round(w, 4), transcript, "ok" if ok else "bad"))
+                conn.commit()
+                print(f"  RETRY {cid}: {seconds:.1f}s WER {w:.2f} -> {'ok' if ok else 'bad'}", flush=True)
+    with (args.out / "review.jsonl").open("w") as fh:
+        for row in conn.execute(
+                'SELECT clip_id, voice, text, seconds, wer, transcript FROM clips WHERE status="bad"'):
+            fh.write(json.dumps(dict(zip(
+                ("id", "voice", "text", "seconds", "wer", "transcript"), row)), ensure_ascii=False) + "\n")
     hours = sum(r[0] for r in conn.execute(
         'SELECT seconds FROM clips WHERE status="ok"')) / 3600
     conn.close()
