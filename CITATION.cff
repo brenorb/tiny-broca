@@ -1,11 +1,9 @@
 cff-version: 1.2.0
 message: "If you use tiny-broca, please cite it as below."
-title: "tiny-broca: a 4.5M-parameter two-voice English text-to-speech model"
-type: software
+title: "tiny-broca: a 4.5M-parameter two-voice Brazilian Portuguese text-to-speech model"
 authors:
-  - given-names: Muhammed
-    family-names: Nazeem
-    orcid: "https://orcid.org/0009-0002-9991-0217"
+  - name: brenorb
+    affiliation: "https://github.com/brenorb"
 year: 2026
 license: Apache-2.0
-url: "https://huggingface.co/n4ze3m/tiny-broca"
+url: "https://huggingface.co/brenorb/tiny-broca"
