@@ -54,7 +54,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate speech from a trained tiny-broca inference checkpoint")
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--text", required=True)
-    parser.add_argument("--voice", choices=("F2", "M2"), default="F2")
+    parser.add_argument("--voice", choices=("F1", "M1"), default="F1")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--speed", type=float, default=1)
     parser.add_argument("--pitch-shift", type=float, default=0, help="Added to log F0 (0.058 is about one semitone)")
