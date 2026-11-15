@@ -14,3 +14,6 @@ ops/
 web/public/assets/
 web/.wrangler/
 node_modules/
+
+# local research data (not part of the release)
+data/
