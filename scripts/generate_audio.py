@@ -33,7 +33,7 @@ from jiwer import wer
 from qwen_tts import Qwen3TTSModel
 
 BASE_MODEL = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
-VOICE_REFS = {"F1": "F1_s11", "M1": "M1_s44"}  # best pilot candidates
+VOICE_REFS = {"F1": "F1", "M1": "M1"}  # selected Common Voice clones (data/refs)
 
 _NUMBER_WORDS = {"zero", "um", "uma", "dois", "duas", "três", "tres", "quatro", "cinco",
                  "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze",
@@ -89,7 +89,7 @@ def open_db(path: Path) -> sqlite3.Connection:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--corpus", type=Path, default=Path("data/corpus"))
-    ap.add_argument("--refs", type=Path, default=Path("data/pilot/references"))
+    ap.add_argument("--refs", type=Path, default=Path("data/refs"))
     ap.add_argument("--out", type=Path, default=Path("data/audio"))
     ap.add_argument("--device", default="mps")
     ap.add_argument("--threads", type=int, default=12)
