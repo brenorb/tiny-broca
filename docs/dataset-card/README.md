@@ -102,7 +102,7 @@ the same sentences.
 
 | Column | Description |
 |---|---|
-| `id` | Clip ID: batch, voice and sentence index, e.g. `b1_F1_000390` |
+| `id` | Clip ID: batch, voice, split and sentence index, e.g. `b1_F1_test_00390` |
 | `text_id` | Sentence ID in the corpus, e.g. `broca01_00000` |
 | `batch` | 1 (conversational and Common Voice) or 2 (Common Voice and templates) |
 | `split` | train, validation or test |

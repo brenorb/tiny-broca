@@ -99,12 +99,13 @@ def main():
         print(f"voice {voice} <- {ref_tag}.wav", flush=True)
 
     conn = open_db(args.out / "state.db")
-    done = {r[0] for r in conn.execute(
-        "SELECT clip_id FROM clips WHERE status='ok'")}
+    # Every attempted clip (ok or bad) is skipped: a clip that failed its two
+    # attempts is excluded by design and must not be regenerated on a resume.
+    done = {r[0] for r in conn.execute("SELECT clip_id FROM clips")}
     jobs = []
     for voice in VOICE_REFS:
         for s in sentences:
-            cid = f"b{s['batch']}_{voice}_{s['index']:05d}"
+            cid = f"b{s['batch']}_{voice}_{s['split']}_{s['index']:05d}"
             if cid not in done:
                 jobs.append((voice, cid, s))
     print(f"to generate: {len(jobs)} clips "
