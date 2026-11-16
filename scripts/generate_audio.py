@@ -142,6 +142,7 @@ def main():
     audio_dir.mkdir(exist_ok=True)
     t_start = time.time()
     n_ok = n_bad = 0
+    last_report = 0
     wers, rtfs = [], []
 
     # Group remaining jobs by voice into batches.
@@ -185,7 +186,8 @@ def main():
                     n_bad += 1
                     print(f"  BAD {cid}: {seconds:.1f}s WER {w:.2f}", flush=True)
             done_n = n_ok + n_bad
-            if done_n % 50 == 0 or b0 + args.batch >= len(vjobs):
+            if done_n - last_report >= 50 or b0 + args.batch >= len(vjobs):
+                last_report = done_n
                 (args.out / "progress.json").write_text(json.dumps({
                     "done": done_n, "ok": n_ok, "bad": n_bad,
                     "wer_mean": round(float(np.mean(wers)), 4) if wers else None,
