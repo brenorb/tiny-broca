@@ -37,7 +37,7 @@ of synthetic speech.
 |---|---|
 | `tiny-broca.pt` | PyTorch weights, float32 |
 | `onnx/model.onnx` | ONNX export, float32, opset 17 |
-| `config.json` | Model settings, letter vocabulary, voices |
+| `config.json` | Model settings: sample rate, windows, voices, vocabulary size |
 | `text.py` | The front end module, verbatim (the web demo runs it in the browser) |
 | `samples/` | The audio on this page |
 
@@ -73,7 +73,7 @@ python -m tiny_broca.infer \
 
 The graph takes letter ids and stress values and returns the waveform. Text is
 converted to ids outside the graph by the front end (`text.py`); the ids are
-the positions in `vocab` in `config.json`.
+the positions in its letter inventory.
 
 ```python
 import numpy as np

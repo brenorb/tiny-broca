@@ -35,8 +35,8 @@ def main():
     refs = json.loads((args.refs / "voices.json").read_text())
     conn = sqlite3.connect(args.audio / "state.db")
     clips = conn.execute(
-        "SELECT clip_id, voice, batch, split, text, seconds, sr, wer, transcript"
-        " FROM clips WHERE status='ok'").fetchall()
+        "SELECT clip_id, voice, batch, split, text, seconds, sr, wer, transcript,"
+        " gen_seconds, rtf FROM clips WHERE status='ok'").fetchall()
     total = conn.execute("SELECT COUNT(*) FROM clips").fetchone()[0]
     conn.close()
 
@@ -52,7 +52,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     splits = {"train": [], "validation": [], "test": []}
     missing_audio = missing_source = 0
-    for cid, voice, batch, split, text, seconds, sr, wer, transcript in clips:
+    for cid, voice, batch, split, text, seconds, sr, wer, transcript, gen_seconds, rtf in clips:
         index = int(cid.rsplit("_", 1)[1])
         path = args.audio / "audio" / f"{cid}.flac"
         if not path.is_file():
@@ -72,11 +72,9 @@ def main():
             "split": split,
             "text": text,
             "source": source,
-            "origin": source,
-            "source_id": None,
             "source_license": "cc0-1.0" if source == "cv" else "project-own",
             "source_url": "https://common-voice.org/datasets" if source == "cv" else None,
-            "voice_id": voice,
+            "voice": voice,
             "audio": {"bytes": path.read_bytes(), "path": f"audio/{cid}.flac",
                       "sampling_rate": sr},
             "duration_seconds": round(float(seconds), 3),
@@ -85,6 +83,8 @@ def main():
             "normalized_wer": float(wer),
             "teacher_model": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
             "reference_audio": ref.get("render"),
+            "gen_seconds": round(float(gen_seconds), 2),
+            "rtf": round(float(rtf), 3),
         })
 
     audio_field = pa.struct({"bytes": pa.binary(), "path": pa.string(),
@@ -93,12 +93,12 @@ def main():
         pa.field("id", pa.string()), pa.field("text_id", pa.string()),
         pa.field("batch", pa.int64()), pa.field("split", pa.string()),
         pa.field("text", pa.string()), pa.field("source", pa.string()),
-        pa.field("origin", pa.string()), pa.field("source_id", pa.string()),
         pa.field("source_license", pa.string()), pa.field("source_url", pa.string()),
-        pa.field("voice_id", pa.string()), pa.field("audio", audio_field),
+        pa.field("voice", pa.string()), pa.field("audio", audio_field),
         pa.field("duration_seconds", pa.float64()), pa.field("sample_rate", pa.int64()),
         pa.field("asr_transcript", pa.string()), pa.field("normalized_wer", pa.float64()),
         pa.field("teacher_model", pa.string()), pa.field("reference_audio", pa.string()),
+        pa.field("gen_seconds", pa.float64()), pa.field("rtf", pa.float64()),
     ])
     summary = {}
     for split, rows in splits.items():

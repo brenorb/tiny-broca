@@ -102,15 +102,18 @@ the same sentences.
 
 | Column | Description |
 |---|---|
-| `id` | Clip ID, derived from the sentence and the voice |
-| `text` | The sentence that was read |
+| `id` | Clip ID: batch, voice and sentence index, e.g. `b1_F1_000390` |
+| `text_id` | Sentence ID in the corpus, e.g. `broca01_00000` |
+| `batch` | 1 (conversational and Common Voice) or 2 (Common Voice and templates) |
 | `split` | train, validation or test |
+| `text` | The sentence that was read |
 | `source` | `cv`, `converse` or `templates` |
+| `source_license`, `source_url` | `cc0-1.0` for Common Voice sentences, otherwise `project-own` |
 | `voice` | F1 or M1 |
-| `audio` | 24 kHz audio |
+| `audio` | 24 kHz audio, as bytes, path and sample rate |
 | `duration_seconds`, `sample_rate` | Audio length and rate |
 | `asr_transcript`, `normalized_wer` | Whisper transcript and its word error rate against `text` |
-| `attempt`, `seed` | Generation attempt and random seed |
+| `gen_seconds`, `rtf` | Generation time and real-time factor of the clip |
 | `teacher_model`, `reference_audio` | Model and voice prompt used |
 
 ## Annotations

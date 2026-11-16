@@ -181,7 +181,7 @@ class DataTests(unittest.TestCase):
             stream = io.BytesIO()
             sf.write(stream, 0.1 * np.sin(2 * np.pi * 200 * time), rate, format="WAV")
             return {"bytes": stream.getvalue()}
-        rows = [{"id": str(i), "text": "Olá.", "voice_id": "F1", "audio": audio(24000), "reference_audio": b"reference bytes",
+        rows = [{"id": str(i), "text": "Olá.", "voice": "F1", "audio": audio(24000), "reference_audio": b"reference bytes",
                  "source_license": "test-synthetic"} for i in range(5)]
         rows[2]["text"] = None
         rows[3]["audio"] = None
@@ -192,7 +192,7 @@ class DataTests(unittest.TestCase):
             pq.write_table(pa.Table.from_pylist(rows), source)
             output = root / "features"
             output.mkdir()
-            args = SimpleNamespace(output=output, inputs=[source], split="train", text_column="text", speaker_column="voice_id", resume=False)
+            args = SimpleNamespace(output=output, inputs=[source], split="train", text_column="text", speaker_column="voice", resume=False)
             calls = {"count": 0}
 
             def interrupted(wave, config):

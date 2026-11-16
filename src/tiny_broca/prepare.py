@@ -71,7 +71,7 @@ def main():
     parser.add_argument("--inputs", nargs="+", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--text-column", default="text")
-    parser.add_argument("--speaker-column", default="voice_id")
+    parser.add_argument("--speaker-column", default="voice")
     parser.add_argument("--config", type=Path)
     parser.add_argument("--split", choices=("train", "validation", "test"), required=True)
     parser.add_argument("--resume", action="store_true", help="Skip durably accepted/rejected records from these same inputs")
@@ -138,7 +138,7 @@ def prepare_split(args, c):
                         raise ValueError("text must be a nonempty string")
                     if speaker not in c.speakers:
                         raise ValueError(f"unknown speaker {speaker!r}; expected {c.speakers}")
-                    provenance = json_safe({k:row[k] for k in ("text_id", "origin", "source_id", "source_license", "source_url", "teacher_model", "reference_audio") if k in row})
+                    provenance = json_safe({k:row[k] for k in ("text_id", "batch", "voice", "source_license", "source_url", "teacher_model", "reference_audio") if k in row})
                     audio = row["audio"]
                     if isinstance(audio, dict):
                         audio = io.BytesIO(audio["bytes"]) if audio.get("bytes") is not None else source.parent / audio["path"]
