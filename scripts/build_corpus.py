@@ -115,7 +115,7 @@ def main():
         # Split batch1 by sentence: 83% / 7.5% / 9.5% (same as original).
         n = len(b1)
         cuts = (int(n * 0.83), int(n * 0.905))
-        parts = [(b1[:cuts[0]], "train"), (b1[cuts[0]:cuts[1]], "val"), (b1[cuts[1]:], "test")]
+        parts = [(b1[:cuts[0]], "train"), (b1[cuts[0]:cuts[1]], "validation"), (b1[cuts[1]:], "test")]
         for rows, split in parts:
             write(rows, 1, split)
             print(f"batch1 {split}: {len(rows)} sentences")
