@@ -17,12 +17,9 @@ Usage:
 
 import argparse
 import json
-import math
-import re
 import sqlite3
 import sys
 import time
-import unicodedata
 from pathlib import Path
 
 import numpy as np
@@ -35,31 +32,7 @@ from qwen_tts import Qwen3TTSModel
 BASE_MODEL = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
 VOICE_REFS = {"F1": "F1", "M1": "M1"}  # selected Common Voice clones (data/refs)
 
-_NUMBER_WORDS = {"zero", "um", "uma", "dois", "duas", "três", "tres", "quatro", "cinco",
-                 "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze",
-                 "quatorze", "quince", "dezenove", "vinte", "trinta", "quarenta",
-                 "cinquenta", "sessenta", "setenta", "oitenta", "noventa", "cem", "cento",
-                 "mil", "milhão", "milhao"}
-NUM = re.compile(r"\d+(?:[.,]\d+)*")
-
-
-def normalize_pt(text):
-    """Casefold, strip accents and punctuation, mask numbers and number words.
-
-    Qwen3-TTS speaks numbers correctly but whisper writes them back as digits
-    ("R$12,50"), so a raw word WER would be meaningless; the duration checks
-    cover skipped or added content.
-    """
-    text = unicodedata.normalize("NFKD", text)
-    text = "".join(c for c in text if not unicodedata.combining(c))
-    text = text.casefold()
-    text = re.sub(r"r\s?\$\s?", " <num> ", text)
-    text = re.sub(r"%", " <num> ", text)
-    text = NUM.sub(" <num> ", text)
-    text = re.sub(r"[^\w\s]", " ", text)
-    words = [w for w in text.split() if not w.startswith("<") and w not in _NUMBER_WORDS
-             and w.rstrip("s") not in _NUMBER_WORDS]
-    return " ".join(words).strip()
+from tiny_broca.text import wer_normalize
 
 
 def load_corpus(corpus_dir: Path):
@@ -170,7 +143,7 @@ def main():
                 path = audio_dir / f"{cid}.flac"
                 sf.write(path, wave, sr)
                 transcript = transcribe(path)
-                w = wer(normalize_pt(s["text"]), normalize_pt(transcript)) if transcript else 1.0
+                w = wer(wer_normalize(s["text"]), wer_normalize(transcript)) if transcript else 1.0
                 ok = (0.5 <= seconds <= 35.0) and (w < 0.15) and transcript
                 conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                              (cid, voice, s["batch"], s["split"], s["text"],
@@ -230,7 +203,7 @@ def main():
                 path = audio_dir / f"{cid}.flac"
                 sf.write(path, wave, sr)
                 transcript = transcribe(path)
-                w = wer(normalize_pt(s["text"]), normalize_pt(transcript)) if transcript else 1.0
+                w = wer(wer_normalize(s["text"]), wer_normalize(transcript)) if transcript else 1.0
                 ok = (0.5 <= seconds <= 35.0) and (w < 0.15) and transcript
                 conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                              (cid, voice, s["batch"], s["split"], s["text"],

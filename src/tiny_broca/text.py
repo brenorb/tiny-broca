@@ -292,6 +292,32 @@ def normalize_text(text):
     return text
 
 
+# For comparing a transcription against its text: numbers are spoken by the
+# teacher but written back as digits by Whisper ("R$ 12,50" is read as "doze
+# vírgula cinquenta"), so a raw word WER would be meaningless.
+_NUMBER_WORDS = frozenset(("zero", "um", "uma", "dois", "duas", "três", "tres", "quatro",
+                           "cinco", "seis", "sete", "oito", "nove", "dez", "onze", "doze",
+                           "treze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove",
+                           "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta",
+                           "oitenta", "noventa", "cem", "cento", "mil", "milhão", "milhao",
+                           "bilhão", "bilhao"))
+_NUM = re.compile(r"\d+(?:[.,]\d+)*")
+
+
+def wer_normalize(text):
+    """Casefold, strip accents and punctuation, mask numbers and number words."""
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    text = text.casefold()
+    text = re.sub(r"r\s?\$\s?", " <num> ", text)
+    text = re.sub(r"%", " <num> ", text)
+    text = _NUM.sub(" <num> ", text)
+    text = re.sub(r"[^\w\s]", " ", text)
+    words = [w for w in text.split() if not w.startswith("<") and w not in _NUMBER_WORDS
+             and w.rstrip("s") not in _NUMBER_WORDS]
+    return " ".join(words).strip()
+
+
 _ACCENTED = frozenset(("á", "â", "é", "ê", "í", "ó", "ô", "õ", "ú", "ã", "õ"))
 
 
