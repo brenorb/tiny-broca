@@ -117,18 +117,20 @@ def pulse_train(f0, sample_rate, hop, limit=0.47, phase=None):
     Frame values sit at samples i*hop and are interpolated in the log domain.
     The sum of all harmonics below ``limit * sample_rate`` has the closed form
     sin((K+1/2)x) / (2 sin(x/2)) - 1/2; the top harmonic fades in and out so the
-    signal stays continuous while the pitch glides. Float64 keeps the phase exact.
+    signal stays continuous while the pitch glides. Runs in float32 (the ONNX
+    graph's precision): the cumulative phase is below 2^15 radians, where
+    float32 still keeps it to a tiny fraction of a degree.
     """
     frames = f0.shape[1]
-    knots = torch.log(f0.double().clamp_min(1.0))
+    knots = torch.log(f0.float().clamp_min(1.0))
     knots = torch.cat((knots, knots[:, -1:]), dim=1)
-    position = torch.arange(frames * hop, device=f0.device, dtype=torch.float64) / hop
+    position = torch.arange(frames * hop, device=f0.device, dtype=torch.float32) / hop
     low = position.floor().long()
     weight = position - low
     frequency = torch.exp(knots[:, low] * (1 - weight) + knots[:, low + 1] * weight)
     theta = 2 * math.pi * torch.cumsum(frequency / sample_rate, dim=1)
     if phase is not None:
-        theta = theta + phase.double()[:, None]
+        theta = theta + phase[:, None]
     theta = torch.remainder(theta, 2 * math.pi)
     harmonics = (limit * sample_rate / frequency).clamp_min(1.0)
     whole = torch.floor(harmonics)
@@ -136,7 +138,7 @@ def pulse_train(f0, sample_rate, hop, limit=0.47, phase=None):
     tiny = denominator.abs() < 1e-7
     core = torch.where(tiny, whole, torch.sin((whole + 0.5) * theta) / torch.where(tiny, torch.ones_like(denominator), denominator) - 0.5)
     wave = core + (harmonics - whole) * torch.cos((whole + 1) * theta)
-    return (wave * torch.sqrt(2.0 / harmonics)).float()
+    return wave * torch.sqrt(2.0 / harmonics)
 
 
 def filtered(source, response, fft, hop, window):
