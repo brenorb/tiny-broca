@@ -34,10 +34,18 @@ echo "   dataset revision: $REV"
   --dataset-revision "$REV" --device mps --resume
 
 echo "== 4/6 train (104k steps)"
+RESUME=()
+if [ -f runs/tiny-broca/last.pt ]; then
+  RESUME=(--resume runs/tiny-broca/last.pt)
+elif [ -n "$(ls -A runs/tiny-broca 2>/dev/null)" ]; then
+  # Debris from a run that died before saving a checkpoint: start fresh.
+  rm -rf runs/tiny-broca
+fi
 "$PY" -m tiny_broca.train \
   --train data/annotations/train.jsonl \
   --validation data/annotations/validation.jsonl \
-  --output runs/tiny-broca --device mps --steps 104000
+  --output runs/tiny-broca --device mps --steps 104000 \
+  ${RESUME[@]+"${RESUME[@]}"}
 
 echo "== 5/6 evaluate (Whisper pt WER on validation, test and novel sentences)"
 "$PY" -m tiny_broca.evaluate \
