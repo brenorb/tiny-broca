@@ -45,6 +45,7 @@ fi
   --train data/annotations/train.jsonl \
   --validation data/annotations/validation.jsonl \
   --output runs/tiny-broca --device mps --steps 104000 \
+  --max-seconds 999999 \
   ${RESUME[@]+"${RESUME[@]}"}
 
 echo "== 5/6 evaluate (Whisper pt WER on validation, test and novel sentences)"
@@ -54,7 +55,7 @@ echo "== 5/6 evaluate (Whisper pt WER on validation, test and novel sentences)"
   --output runs/eval --tag final --device mps
 
 echo "== 6/6 ONNX export"
-"$PY" scripts/export_checkpoint.py \
+"$PY" -m tiny_broca.export \
   --checkpoint runs/tiny-broca/inference.pt \
   --output releases/model.onnx
 
