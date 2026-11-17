@@ -32,8 +32,8 @@ word-final L, N, R or X). Numbers, dates, times, money, percentages and
 document identifiers are normalised to words with Brazilian conventions
 (`1.234,56` → "mil duzentos e trinta e quatro vírgula cinquenta e seis").
 
-The training audio is synthetic: Qwen3-TTS 1.7B, about 19 hours, every
-sentence read by both voices. The two voices are clones of two Common Voice
+The training audio is synthetic: Qwen3-TTS 1.7B generated about 19 hours, of
+which about 16 survived quality control, every sentence read by both voices. The two voices are clones of two Common Voice
 speakers; the short reference recordings are the only real human audio in the
 pipeline and they are not part of the model.
 

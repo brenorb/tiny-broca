@@ -14,7 +14,7 @@ datasets:
 
 tiny-broca is a small **Brazilian Portuguese** text-to-speech model with two
 voices, F1 (female) and M1 (male). The complete model, including the waveform
-generator, has 4.5M parameters and was trained from scratch on about 19 hours
+generator, has 4.5M parameters and was trained from scratch on about 16 hours
 of synthetic speech.
 
 <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-1.wav"></audio>

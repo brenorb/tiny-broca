@@ -28,8 +28,8 @@ Every sentence is read by both voices.
 | | |
 |---|---|
 | Sentences | 8,984 |
-| Clips | 17,968 (before QC rejection) |
-| Duration | about 19 hours |
+| Clips | 15,223 (after QC rejection; 17,968 generated) |
+| Duration | about 16 hours |
 | Voices | F1, M1 |
 | Audio | 24 kHz mono, 16-bit FLAC, stored inside the Parquet files |
 | Language | Portuguese (Brazil) |
