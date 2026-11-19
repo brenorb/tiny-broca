@@ -13,7 +13,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PY=.venv/bin/python
-export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.3
 
 echo "== prepare features (money run, fresh tree)"
 for split in train validation test; do
@@ -34,6 +33,10 @@ echo "   dataset revision: $REV"
   --dataset-revision "$REV" --device mps --resume
 
 echo "== fine-tune from the 104k checkpoint (+6,000 steps)"
+# Training only: the MPS allocator keeps one GPU program per batch shape and
+# never frees them; the watermark keeps the pool from eating system RAM.
+# (Not for the DSP stages above: their conv path rejects a reduced pool.)
+export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.3
 STEPS=110000
 while true; do
   ARGS=()
