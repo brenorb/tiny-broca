@@ -35,8 +35,9 @@ echo "   dataset revision: $REV"
 echo "== fine-tune from the 104k checkpoint (+6,000 steps)"
 # Training only: the MPS allocator keeps one GPU program per batch shape and
 # never frees them; the watermark keeps the pool from eating system RAM.
-# (Not for the DSP stages above: their conv path rejects a reduced pool.)
-export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.3
+# Not for the DSP stages above. torch 2.15 rejects any high watermark below
+# 1.4 ("invalid low watermark ratio"); 1.4 is the tightest valid pool.
+export PYTORCH_MPS_HIGH_WATERMARK_RATIO=1.4
 STEPS=110000
 while true; do
   ARGS=()

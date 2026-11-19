@@ -39,7 +39,7 @@ echo "== 4/6 train (104k steps, 30-minute chunks)"
 # bound (observed: 86 GB). Chunking bounds memory (each chunk saves,
 # exits, and resumes from last.pt; rollover is lossless) and the
 # high-watermark ratio keeps the MPS pool from eating system RAM.
-export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.3
+export PYTORCH_MPS_HIGH_WATERMARK_RATIO=1.4
 STEPS=104000
 while true; do
   RESUME=()
