@@ -39,7 +39,7 @@ def load_corpus(corpus_dir: Path):
     import pyarrow.parquet as pq
 
     sentences = []
-    for batch in (1, 2):
+    for batch in (1, 2, 3):
         for path in sorted(corpus_dir.glob(f"batch{batch}/*.parquet")):
             table = pq.read_table(path)
             for i, (text, source) in enumerate(zip(table.column("text").to_pylist(),

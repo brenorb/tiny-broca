@@ -43,7 +43,7 @@ def main():
     # (batch, split, file row position) -> source; the generator indexed
     # sentences the same way.
     source_map = {}
-    for batch in (1, 2):
+    for batch in (1, 2, 3):
         for path in sorted(args.corpus.glob(f"batch{batch}/*.parquet")):
             table = pq.read_table(path)
             for i, source in enumerate(table.column("source").to_pylist()):
