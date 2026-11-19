@@ -146,6 +146,9 @@ def main():
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--splits", nargs="+", default=list(SPLITS), choices=SPLITS)
     parser.add_argument("--limit", type=int, help="Annotate only the first N rows per split (smoke test; never complete)")
+    parser.add_argument("--only-ids", type=Path, help="Text file of record ids (one per line); annotate only those rows. "
+                                                     "For a targeted re-annotation run with different gate limits "
+                                                     "into a NEW output directory; merge the manifest by hand afterwards.")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--refine", type=int, default=0, help="Boundary refinement passes with the from-scratch frame classifier")
     parser.add_argument("--refine-band", type=int, default=4)
@@ -170,11 +173,17 @@ def main():
     rows = {split: load_acoustic_rows(args.features, split, config) for split in args.splits}
     if args.limit:
         rows = {split: value[:args.limit] for split, value in rows.items()}
+    only_ids = None
+    if args.only_ids:
+        wanted = {line.strip() for line in args.only_ids.read_text().splitlines() if line.strip()}
+        rows = {split: [r for r in value if r.get("id") in wanted] for split, value in rows.items()}
+        only_ids = file_hash(args.only_ids)
     recognizer = PhoneRecognizer(args.device)
     identity = {
         "annotation_version": ANNOTATION_VERSION, "acoustic": config.acoustic_fingerprint, "frontend": frontend_fingerprint(),
         **frontend_runtime(), "aligner": {"model": ALIGNER_MODEL, "revision": recognizer.revision},
-        "alignment": settings.to_dict(), "dataset_revision": args.dataset_revision, "limit": args.limit,
+        "alignment": settings.to_dict(), "gate": limits, "dataset_revision": args.dataset_revision,
+        "limit": args.limit, "only_ids": only_ids,
         "sources": {split: file_hash(args.features / (split + ".jsonl")) for split in args.splits},
     }
     fingerprint = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
