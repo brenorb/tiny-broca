@@ -69,15 +69,18 @@ word error rate.
 |---|---|---:|
 | 1 | conversational slots + Common Voice | 4,905 |
 | 2 | Common Voice + number/date/money templates | 4,079 |
+| 3 | money phrases (amounts, bills, cards) | 400 |
 
-Each sentence is read by both voices, for a total of 17,968 clips (about 19
-hours). Batch 1 mirrors the first batch of the original dataset (conversational
-sentences, here generated deterministically from written slot pools instead of
-one-shot LLM calls, so the corpus is reproducible; plus Common Voice
-sentences). Batch 2 is training data only, mirroring the original second
-batch: Common Voice sentences and templates that exercise every rule of the
-front end's text normalisation (Brazilian numbers, dates, times, money in
-reais, percentages, phone numbers, document identifiers).
+Each sentence is read by both voices: 9,384 sentences, 19,504 generated
+clips, 16,434 accepted (about 19 hours). Batch 1 mirrors the first batch of
+the original dataset (conversational sentences, here generated deterministically
+from written slot pools instead of one-shot LLM calls, so the corpus is
+reproducible; plus Common Voice sentences). Batch 2 is training data only,
+mirroring the original second batch: Common Voice sentences and templates that
+exercise every rule of the front end's text normalisation (Brazilian numbers,
+dates, times, money in reais, percentages, phone numbers, document
+identifiers). Batch 3 is training data only: phrases dominated by money
+amounts, generated after the first training run.
 
 Letter durations come from forced alignment with
 `jonatasgrosman/wav2vec2-xls-r-1b-portuguese` (wav2vec 2.0 XLS-R 1B fine-tuned
@@ -89,13 +92,40 @@ annotation format is described in [annotations.md](annotations.md).
 
 Training has two phases: spectral losses only for the first 8,000 steps, then
 an added adversarial loss with the discriminators, as in the English original.
-104,000 steps on the M5 Max, run locally.
+The released model is `runs/tiny-broca-ft2/last.pt`: 104,000 steps from
+scratch on batches 1 and 2, then 14,000 more steps (to 118,000) continuing
+from the checkpoint on the same data plus batch 3, so that money values and
+long number strings carry extra weight against the generator's habit of
+rushing them. All runs were on an Apple M4 Pro (18-core, MPS).
 
 ## Evaluation
 
 Word error rate of synthesized speech, transcribed with Whisper (multilingual,
-pt), on the validation and test sets plus sentences written after the
-corpus. (Pending the training run.)
+small, pt), on the validation and test sets plus novel sentences written
+after the corpus (the reported step is 118,000; see
+`runs/eval-ft2/report.json` and the model card).
+
+### Number pacing
+
+Measured on the letter-level annotations (seconds per letter of the money
+words, the same measure for every population):
+
+| Population | s/letter |
+|---|---:|
+| Human Common Voice money phrases (1,532 clips) | 0.055 |
+| Qwen3-TTS money phrases (561) | 0.052 |
+| Qwen3-TTS numbers inside ordinary sentences, 1-2 words (1,930) | 0.068 |
+| Qwen3-TTS numbers inside ordinary sentences, 3+ words (1,209) | 0.058 |
+
+The generator is at or near human pace for numbers of every length, so the
+training data carries no rushed-number bias. The model nevertheless reads
+*very long* number strings (a dozen or more words, as in the novel
+evaluation) faster than the teacher does: the duration predictor compresses
+them. A region-selective time-stretch of the money clips to an even slower
+pace was tried and abandoned: consistent re-measurement showed the stretch
+overshot the human rate by about 30%, and the standard alignment gate accepted
+only 76 of the 581 stretched clips, so the corrected data would have been
+smaller *and* slower than the teacher's natural readings.
 
 ## Third-party components
 

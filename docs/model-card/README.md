@@ -14,7 +14,7 @@ datasets:
 
 tiny-broca is a small **Brazilian Portuguese** text-to-speech model with two
 voices, F1 (female) and M1 (male). The complete model, including the waveform
-generator, has 4.5M parameters and was trained from scratch on about 16 hours
+generator, has 4.5M parameters and was trained from scratch on 17 hours
 of synthetic speech.
 
 <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-1.wav"></audio>
@@ -45,7 +45,14 @@ of synthetic speech.
 
 | Text | F1 | M1 |
 |---|---|---|
-SAMPLE_ROWS
+| A reunião de amanhã foi remarcada para as quinze horas e quinze. | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-0.wav"></audio> | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/M1-0.wav"></audio> |
+| Ligue para a sua avó antes que comece o fim de semana, por favor. | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-1.wav"></audio> | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/M1-1.wav"></audio> |
+| Quantas pessoas vão à conferência em setembro? | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-2.wav"></audio> | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/M1-2.wav"></audio> |
+| Não acredito que já é meia-noite e meia; devemos ir embora agora! | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-3.wav"></audio> | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/M1-3.wav"></audio> |
+| A tiny broca é um pequeno modelo de texto para fala treinado do zero. | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-4.wav"></audio> | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/M1-4.wav"></audio> |
+| Depois da tempestade, o ar da montanha parecia fresco, limpo e surpreendentemente quente. | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-5.wav"></audio> | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/M1-5.wav"></audio> |
+| Você pode me enviar o relatório até sexta-feira à tarde, por favor? | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-6.wav"></audio> | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/M1-6.wav"></audio> |
+| A conta do aluguel fechou em mil duzentos e quarenta e cinco reais e dez centavos. | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-7.wav"></audio> | <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/M1-7.wav"></audio> |
 
 ## Usage
 
@@ -146,9 +153,9 @@ once per frame (256 samples, 10.7 ms). This part has 25,862 parameters.
 | | |
 |---|---|
 | Data | [brenorb/tiny-broca](https://huggingface.co/datasets/brenorb/tiny-broca): 9,384 sentences, 16,434 clips, two voices |
-| Steps | 104,000 |
+| Steps | 118,000 |
 | Losses | Multi-resolution spectral losses; adversarial loss with multi-period and multi-resolution discriminators after step 8,000 |
-| Hardware | |
+| Hardware | Apple M4 Pro, 18-core, MPS |
 
 The training audio is synthetic: every clip was generated with Qwen3-TTS 1.7B
 Base (Apache-2.0) in one of the two voices. The voices are clones of two

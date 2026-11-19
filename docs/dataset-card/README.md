@@ -32,8 +32,8 @@ Every sentence is read by both voices.
 | | |
 |---|---|
 | Sentences | 9,384 |
-| Clips | 16,434 (after QC rejection; 19,504 generated) |
-| Duration | about 19 hours |
+| Clips | 16,434 accepted of 19,504 generated |
+| Duration | 17.3 hours |
 | Voices | F1, M1 |
 | Audio | 24 kHz mono, 16-bit FLAC, stored inside the Parquet files |
 | Language | Portuguese (Brazil) |
@@ -58,7 +58,7 @@ audio = row["audio"]["array"]
 Counts are the accepted clips' unique sentences; each sentence is read by
 both voices, so the clip count is roughly twice the sentence count.
 
-| Config | Split | Sentences | Clips | Text |
+| Config | Split | Sentences | Clips | 16,434 accepted of 19,504 generated |
 |---|---|---:|---:|---|
 | `batch1` | train | 3,560 | 7,119 | conversational sentences and Common Voice |
 | `batch1` | validation | 647 | 1,294 | same |
@@ -87,9 +87,7 @@ corpus.
    using the reference clips as the voice prompt.
 3. Each clip was transcribed with Whisper (multilingual, pt). Clips above 15%
    word error rate, or with implausible duration, speaking rate or silence,
-   were generated a second time; clips that failed twice were left out. The
-   rejections are listed in `generation/*/review.jsonl`. (Counts pending the
-   first full run.)
+   were generated a second time; clips that failed twice were left out. 0 clips failed twice and are listed in `generation/*/review.jsonl`.
 4. Accepted clips were peak-normalised to 0.95.
 
 The generation scripts and their settings are in `generation/`.
@@ -140,7 +138,7 @@ frames, from forced alignment with
 `jonatasgrosman/wav2vec2-xls-r-1b-portuguese`. Clips that fail the alignment
 checks are listed with a reason in the `*.rejected.jsonl` files. See
 [docs/annotations.md](https://github.com/brenorb/tiny-broca/blob/main/docs/annotations.md)
-in the code repository. (Pending the first full run.)
+in the code repository. 14,290 clips are annotated; 933 failed the alignment checks.
 
 ## Limitations
 
