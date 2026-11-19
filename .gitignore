@@ -17,3 +17,4 @@ node_modules/
 
 # local research data (not part of the release)
 data/
+releases/

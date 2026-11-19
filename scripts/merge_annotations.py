@@ -97,7 +97,11 @@ def main():
     (args.output / "phonemes.jsonl").write_text((args.base / "phonemes.jsonl").read_text(), encoding="utf-8")
     (args.output / "summary.json").write_text((args.base / "summary.json").read_text(), encoding="utf-8")
     metadata = {"identity": identity, "fingerprint": fingerprint, "complete": True,
-                "stage": base_meta.get("stage", "ctc"), "acoustic_root": base_meta.get("acoustic_root"),
+                "stage": base_meta.get("stage", "ctc"),
+                # The merged run must read from the EXTRA tree: the extra rows
+                # point at its files, and the base rows' feature files are
+                # bit-identical there (same source audio, same extraction).
+                "acoustic_root": extra_meta.get("acoustic_root") or base_meta.get("acoustic_root"),
                 "limits": base_meta.get("limits"),
                 "counts": {split: sum(1 for _ in open(args.output / (split + ".jsonl"))) for split in base_meta["counts"]}}
     (args.output / "annotations.json").write_text(json.dumps(metadata, indent=1))

@@ -102,14 +102,15 @@ mkdir -p "$DS/data" "$DS/batch2/data" "$DS/batch3/data" "$DS/references" "$DS/ge
 "$PY" - "$DATE" "$DS" <<'PYEOF'
 import sys
 from pathlib import Path
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 date, ds = sys.argv[1], Path(sys.argv[2])
 for split in ("train", "validation", "test"):
     table = pq.read_table(f"data/dataset/{split}.parquet")
-    pq.write_table(table.filter(table["batch"] == 1), ds / f"data/{split}-{date}.parquet")
+    pq.write_table(table.filter(pc.equal(table["batch"], 1)), ds / f"data/{split}-{date}.parquet")
     if split == "train":
-        pq.write_table(table.filter(table["batch"] == 2), ds / f"batch2/data/train-{date}.parquet")
-        pq.write_table(table.filter(table["batch"] == 3), ds / f"batch3/data/train-{date}.parquet")
+        pq.write_table(table.filter(pc.equal(table["batch"], 2)), ds / f"batch2/data/train-{date}.parquet")
+        pq.write_table(table.filter(pc.equal(table["batch"], 3)), ds / f"batch3/data/train-{date}.parquet")
     print(split, len(table))
 PYEOF
 cp data/refs/F1.wav data/refs/M1.wav data/refs/voices.json "$DS/references/"
