@@ -36,7 +36,12 @@ def main():
     ap.add_argument("--base", type=Path, required=True)
     ap.add_argument("--extra", type=Path, required=True)
     ap.add_argument("--output", type=Path, required=True)
+    ap.add_argument("--drop-ids", type=Path, help="Text file of base-run ids to drop (one per line) "
+                                                  "before merging — e.g. the superseded original-pace clips.")
     args = ap.parse_args()
+    drop = set()
+    if args.drop_ids:
+        drop = {line.strip() for line in args.drop_ids.read_text().splitlines() if line.strip()}
 
     base_meta = json.loads((args.base / "annotations.json").read_text())
     extra_meta = json.loads((args.extra / "annotations.json").read_text())
@@ -61,6 +66,8 @@ def main():
             if not line.strip():
                 continue
             row = json.loads(line)
+            if row["id"] in drop:
+                continue
             row["annotation"] = fingerprint
             base_rows.append(row)
         extra_rows = []
