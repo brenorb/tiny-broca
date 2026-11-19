@@ -32,10 +32,11 @@ word-final L, N, R or X). Numbers, dates, times, money, percentages and
 document identifiers are normalised to words with Brazilian conventions
 (`1.234,56` → "mil duzentos e trinta e quatro vírgula cinquenta e seis").
 
-The training audio is synthetic: Qwen3-TTS 1.7B generated about 19 hours, of
-which about 16 survived quality control, every sentence read by both voices. The two voices are clones of two Common Voice
-speakers; the short reference recordings are the only real human audio in the
-pipeline and they are not part of the model.
+The training audio is synthetic: Qwen3-TTS 1.7B generated 19,504 clips
+(about 22 hours) across three batches; 16,434 clips (about 19 hours) survived
+quality control, every sentence read by both voices. The two voices are clones
+of two Common Voice speakers; the short reference recordings are the only real
+human audio in the pipeline and they are not part of the model.
 
 See [docs/model.md](docs/model.md) for the full architecture and data
 description, and [docs/annotations.md](docs/annotations.md) for the letter
@@ -69,7 +70,7 @@ the model and the front end entirely client-side.
 | Path | Contents |
 |---|---|
 | `src/tiny_broca/` | Front end, model, data, alignment, training, evaluation, export |
-| `data/corpus/` | The 8,984-sentence text corpus (Parquet, two batches) |
+| `data/corpus/` | The 9,384-sentence text corpus (Parquet, three batches) |
 | `data/voices/`, `data/pilot/` | Voice references and pilot recordings |
 | `scripts/` | Corpus builder, voice design, audio generation |
 | `docs/` | Model and data description, annotation format, HF cards |
