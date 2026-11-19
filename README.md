@@ -33,7 +33,7 @@ document identifiers are normalised to words with Brazilian conventions
 (`1.234,56` → "mil duzentos e trinta e quatro vírgula cinquenta e seis").
 
 The training audio is synthetic: Qwen3-TTS 1.7B generated 19,504 clips
-(about 22 hours) across three batches; 16,434 clips (about 19 hours) survived
+(about 21 hours) across three batches; 16,434 clips (about 17 hours) survived
 quality control, every sentence read by both voices. The two voices are clones
 of two Common Voice speakers; the short reference recordings are the only real
 human audio in the pipeline and they are not part of the model.

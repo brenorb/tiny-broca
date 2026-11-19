@@ -72,7 +72,7 @@ word error rate.
 | 3 | money phrases (amounts, bills, cards) | 400 |
 
 Each sentence is read by both voices: 9,384 sentences, 19,504 generated
-clips, 16,434 accepted (about 19 hours). Batch 1 mirrors the first batch of
+clips (about 21 hours), 16,434 accepted (about 17 hours). Batch 1 mirrors the first batch of
 the original dataset (conversational sentences, here generated deterministically
 from written slot pools instead of one-shot LLM calls, so the corpus is
 reproducible; plus Common Voice sentences). Batch 2 is training data only,
