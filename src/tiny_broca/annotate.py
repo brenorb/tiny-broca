@@ -336,7 +336,9 @@ def main():
         for voice, table in phone_frames.items()}
     summary["pause_tokens"] = {symbol: {"count": pause_tokens[symbol], "with_frames": round(pause_nonzero[symbol] / pause_tokens[symbol], 4)}
                                for symbol in pause_tokens}
-    complete = not args.limit and set(args.splits) == set(SPLITS)
+    # A --only-ids run completes when every row in that scope is processed;
+    # a full run (no id filter) requires every split.
+    complete = not args.limit and (args.only_ids is not None or set(args.splits) == set(SPLITS))
     atomic_json(args.output / "summary.json", summary)
     atomic_json(metadata_path, {"identity": identity, "fingerprint": fingerprint, "complete": complete, "stage": args.stage,
                                 "acoustic_root": str(args.features.resolve()), "limits": limits,
