@@ -46,8 +46,10 @@ for split in ("train", "validation", "test"):
     if r.exists():
         rejected_align += sum(1 for line in r.open() if line.strip())
 
+import sqlite3
+generated = sqlite3.connect("data/audio/state.db").execute("SELECT COUNT(*) FROM clips").fetchone()[0]
 text = ds_card.read_text(encoding="utf-8")
-text = re.sub(r"\| Clips \| .*", f"| Clips | {total:,} accepted of 17,968 generated |", text)
+text = re.sub(r"\| Clips \| .*", f"| Clips | {total:,} accepted of {generated:,} generated |", text)
 text = re.sub(r"\| Duration \| about \d+ hours \|", f"| Duration | {hours:.1f} hours |", text)
 text = re.sub(r" The\s+rejections are listed in `generation/\*/review\.jsonl`\.\s*\(Counts pending the\s*first full run\.\)",
               f" {rejected:,} clips failed twice and are listed in `generation/*/review.jsonl`.", text)
@@ -55,7 +57,7 @@ text = text.replace("(Pending the first full run.)",
                     f"{annotations:,} clips are annotated; {rejected_align:,} failed the alignment checks.")
 ds_card.write_text(text, encoding="utf-8")
 
-report = json.loads(Path("runs/eval/report.json").read_text(encoding="utf-8"))
+report = json.loads(Path("runs/eval-ft2/report.json").read_text(encoding="utf-8"))
 sentences = {}
 for s in report["samples"]:
     if s["group"] != "novel":
@@ -96,7 +98,7 @@ print(f"model card: step {report['step']}, {len(sentences)} novel sentences")
 PYEOF
 
 echo "== stage dataset"
-mkdir -p "$DS/data" "$DS/batch2/data" "$DS/references" "$DS/generation" "$DS/annotations"
+mkdir -p "$DS/data" "$DS/batch2/data" "$DS/batch3/data" "$DS/references" "$DS/generation" "$DS/annotations"
 "$PY" - "$DATE" "$DS" <<'PYEOF'
 import sys
 from pathlib import Path
@@ -107,6 +109,7 @@ for split in ("train", "validation", "test"):
     pq.write_table(table.filter(table["batch"] == 1), ds / f"data/{split}-{date}.parquet")
     if split == "train":
         pq.write_table(table.filter(table["batch"] == 2), ds / f"batch2/data/train-{date}.parquet")
+        pq.write_table(table.filter(table["batch"] == 3), ds / f"batch3/data/train-{date}.parquet")
     print(split, len(table))
 PYEOF
 cp data/refs/F1.wav data/refs/M1.wav data/refs/voices.json "$DS/references/"
@@ -123,21 +126,21 @@ cp docs/dataset-card/LICENSE.md "$DS/LICENSE.md"
 
 echo "== stage model"
 mkdir -p "$MK/onnx" "$MK/samples"
-cp runs/tiny-broca/inference.pt "$MK/tiny-broca.pt"
+cp runs/tiny-broca-ft2/inference.pt "$MK/tiny-broca.pt"
 cp releases/model.onnx "$MK/onnx/model.onnx"
-cp runs/tiny-broca/config.json "$MK/config.json"
+cp runs/tiny-broca-ft2/config.json "$MK/config.json"
 cp src/tiny_broca/text.py "$MK/text.py"
 "$PY" - "$MK" <<'PYEOF'
 import json, shutil, sys
 from pathlib import Path
 mk = Path(sys.argv[1])
-report = json.loads(Path("runs/eval/report.json").read_text(encoding="utf-8"))
+report = json.loads(Path("runs/eval-ft2/report.json").read_text(encoding="utf-8"))
 count = 0
 for s in report["samples"]:
     if s["group"] != "novel":
         continue
     number = int(s["id"].rsplit("_", 1)[0].removeprefix("novel"))
-    shutil.copy(Path("runs/eval/audio") / s["generated"],
+    shutil.copy(Path("runs/eval-ft2/audio") / s["generated"],
                 mk / "samples" / f"{s['voice']}-{number}.wav")
     count += 1
 print(f"staged {count} samples")
@@ -151,10 +154,16 @@ hf upload brenorb/tiny-broca "$DS" . --type dataset \
   --commit-description "Synthetic two-voice Brazilian Portuguese speech, assembled by scripts/assemble_dataset.py"
 hf upload brenorb/tiny-broca "$MK" . --type model \
   --commit-message "Model: $DATE" \
-  --commit-description "Trained 104k steps on the tiny-broca dataset (see runs/eval/report.json)"
+  --commit-description "Trained 118k steps on the tiny-broca dataset (see runs/eval-ft2/report.json)"
 
 echo "== web demo"
-bash web/fetch_assets.sh .
+if command -v wrangler >/dev/null; then
+  bash web/fetch_assets.sh .
+else
+  echo "   wrangler not installed; skipping the web demo (repo and model are uploaded)"
+  echo "published. The repos stay private until the public flip."
+  exit 0
+fi
 if wrangler pages project get tiny-broca-demo >/dev/null 2>&1; then
   wrangler pages deploy web/public --project-name tiny-broca-demo
 else

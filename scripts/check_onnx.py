@@ -23,12 +23,12 @@ from tiny_broca.infer import load_model, match_frontend
 from tiny_broca.text import phonemize
 
 SENTENCES = (
-    "Hello! This is tiny broca.",
-    "The weather is nice today, and I feel very relaxed.",
-    "Did you really pay $42.50 for that on March 3rd, 2024?",
-    "She sells seashells by the seashore; the shells she sells are surely seashells.",
-    "After a long and difficult journey across the mountains, the travellers finally reached the small village, "
-    "where they were welcomed with warm food, a place to sleep and many questions about the road behind them.",
+    "Olá! Eu sou a tiny broca.",
+    "O tempo está bom hoje, e eu estou muito relaxada.",
+    "Você pagou R$ 42,50 por isso em 3 de março de 2024?",
+    "O rato roeu a roupa do rei de Roma, e o rei de Roma ficou muito irritado com o rato.",
+    "Depois de uma longa e difícil viagem pelas montanhas, os viajantes finalmente chegaram à pequena vila, "
+    "onde foram recebidos com comida quente, um lugar para dormir e muitas perguntas sobre a estrada atrás deles.",
 )
 
 

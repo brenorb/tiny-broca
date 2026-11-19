@@ -145,7 +145,7 @@ once per frame (256 samples, 10.7 ms). This part has 25,862 parameters.
 
 | | |
 |---|---|
-| Data | [brenorb/tiny-broca](https://huggingface.co/datasets/brenorb/tiny-broca): 8,984 sentences, two voices |
+| Data | [brenorb/tiny-broca](https://huggingface.co/datasets/brenorb/tiny-broca): 9,384 sentences, 16,434 clips, two voices |
 | Steps | 104,000 |
 | Losses | Multi-resolution spectral losses; adversarial loss with multi-period and multi-resolution discriminators after step 8,000 |
 | Hardware | |
@@ -158,6 +158,11 @@ the model. Letter durations come from forced alignment with
 `jonatasgrosman/wav2vec2-xls-r-1b-portuguese`, which is used only to label
 the training data. No pretrained weights are part of the model.
 
+The first 104,000 steps use `batch1` and `batch2`. The released model then
+continues for 14,000 more steps (to step 118,000) on the same data plus
+`batch3`, money phrases: the generator tends to rush long number strings, so
+the later rounds give money values extra weight.
+
 ## Evaluation
 
 Word error rate of synthesized speech, transcribed with Whisper
@@ -169,6 +174,8 @@ way for reference. (Pending the training run.)
 - Brazilian Portuguese only, two fixed voices, no voice cloning.
 - The voice is clear but can sound slightly synthetic.
 - The same text is always read the same way. There is no sampling of prosody.
+- Very long number strings (a dozen or more words) are read a little faster
+  than the training data; the duration predictor compresses them slightly.
 - Foreign names and unusual spellings are often mispronounced.
 - No streaming.
 - The training data is itself synthetic, so the model cannot be more natural

@@ -18,6 +18,10 @@ configs:
   data_files:
   - split: train
     path: batch2/data/train-*.parquet
+- config_name: batch3
+  data_files:
+  - split: train
+    path: batch3/data/train-*.parquet
 ---
 # tiny-broca dataset
 
@@ -27,9 +31,9 @@ Every sentence is read by both voices.
 
 | | |
 |---|---|
-| Sentences | 8,984 |
-| Clips | 15,223 (after QC rejection; 17,968 generated) |
-| Duration | about 16 hours |
+| Sentences | 9,384 |
+| Clips | 16,434 (after QC rejection; 19,504 generated) |
+| Duration | about 19 hours |
 | Voices | F1, M1 |
 | Audio | 24 kHz mono, 16-bit FLAC, stored inside the Parquet files |
 | Language | Portuguese (Brazil) |
@@ -42,6 +46,7 @@ from datasets import load_dataset
 
 batch1 = load_dataset("brenorb/tiny-broca", "batch1")
 batch2 = load_dataset("brenorb/tiny-broca", "batch2")
+batch3 = load_dataset("brenorb/tiny-broca", "batch3")
 
 row = batch1["train"][0]
 print(row["voice"], row["text"])
@@ -50,19 +55,26 @@ audio = row["audio"]["array"]
 
 ## Contents
 
-| Config | Split | Sentences | Text |
-|---|---|---:|---|
-| `batch1` | train | 4,071 | conversational sentences and Common Voice |
-| `batch1` | validation | 368 | same |
-| `batch1` | test | 466 | same |
-| `batch2` | train | 4,079 | Common Voice and templates |
+Counts are the accepted clips' unique sentences; each sentence is read by
+both voices, so the clip count is roughly twice the sentence count.
+
+| Config | Split | Sentences | Clips | Text |
+|---|---|---:|---:|---|
+| `batch1` | train | 3,560 | 7,119 | conversational sentences and Common Voice |
+| `batch1` | validation | 647 | 1,294 | same |
+| `batch1` | test | 404 | 807 | same |
+| `batch2` | train | 3,327 | 6,653 | Common Voice and templates |
+| `batch3` | train | 343 | 561 | money phrases: amounts, cards and bills |
 
 `batch1` mirrors the first batch of the corpus this project follows
 (conversational speech plus natural sentences); `batch2` is training data
 only, mirroring its second batch (news-style sentences plus sentences that
-exercise every rule of the text normalisation). Splits are made by sentence:
-both readings of a sentence are always in the same split, so the validation
-and test sentences are the same for every model trained on this corpus.
+exercise every rule of the text normalisation). `batch3` is training data
+only: phrases dominated by money amounts, generated after the first training
+run so the model hears numbers read at their full value. Splits are made by
+sentence: both readings of a sentence are always in the same split, so the
+validation and test sentences are the same for every model trained on this
+corpus.
 
 ## How it was made
 
@@ -94,6 +106,10 @@ The `source` column records where every sentence came from.
 | Mozilla Common Voice (Brazilian Portuguese) | 4,405 | CC0 |
 | Conversational sentences, generated deterministically from written slot pools | 3,500 | this project |
 | Templates: Brazilian numbers, dates, times, money, identifiers, questions | 1,079 | this project |
+| Money phrases (`batch3`) | 400 | this project |
+
+Accepted clips by source: Common Voice 7,706, conversational 6,589,
+templates 1,578, money 561.
 
 The conversational slots keep the corpus reproducible: the same seed produces
 the same sentences.
