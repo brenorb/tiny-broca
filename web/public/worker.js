@@ -11,6 +11,11 @@ const DATA = ["text.py"];
 importScripts(PYODIDE + "pyodide.js", ORT + "ort.wasm.min.js");
 
 let pyodide, phonemize, session, config;
+// Absolute directory of the page, passed with the "load" message: recent
+// browsers materialise worker scripts from blob: URLs, so relative fetches
+// inside this worker do not resolve against the site.
+let ROOT = "/";
+const asset = (path) => new URL(path, ROOT).href;
 
 const status = (text, progress) => postMessage({ type: "status", text, progress });
 
@@ -55,7 +60,7 @@ async function fetchBytes(url, label) {
 async function loadFrontEnd() {
   status("Loading the front end");
   pyodide = await loadPyodide({ indexURL: PYODIDE });
-  const source = await Promise.all(DATA.map((name) => download("assets/" + name, "Loading the front end")));
+  const source = await Promise.all(DATA.map((name) => download(asset("assets/" + name), "Loading the front end")));
   status("Starting the front end");
   pyodide.runPython(new TextDecoder().decode(source[0]));
   pyodide.runPython(`
@@ -71,8 +76,8 @@ phonemize_json("Olá.")
 }
 
 async function loadModel() {
-  config = await (await fetch("assets/config.json")).json();
-  const bytes = await download("assets/model.onnx", "Loading the model");
+  config = await (await fetch(asset("assets/config.json"))).json();
+  const bytes = await download(asset("assets/model.onnx"), "Loading the model");
   status("Starting the model");
   ort.env.wasm.wasmPaths = ORT;
   ort.env.wasm.numThreads = 1;
@@ -146,6 +151,7 @@ async function speak({ id, text, voice, speed }) {
 onmessage = async ({ data }) => {
   try {
     if (data.type === "load") {
+      ROOT = data.base || "/";
       await Promise.all([loadFrontEnd(), loadModel()]);
       postMessage({ type: "ready", voices: config.voices });
     } else if (data.type === "speak") {

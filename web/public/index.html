@@ -204,7 +204,9 @@ $("text").addEventListener("keydown", (event) => {
 });
 
 setStatus("Carregando o modelo e o front end…");
-worker.postMessage({ type: "load" });
+// The page's directory, absolute: recent browsers materialise worker scripts
+// from blob: URLs, where relative fetches no longer resolve.
+worker.postMessage({ type: "load", base: new URL(".", location.href).href });
 </script>
 </body>
 </html>
