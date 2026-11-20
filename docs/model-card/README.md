@@ -37,7 +37,7 @@ of synthetic speech.
 |---|---|
 | `tiny-broca.pt` | PyTorch weights, float32 |
 | `onnx/model.onnx` | ONNX export, float32, opset 17 |
-| `config.json` | Model settings: sample rate, windows, voices, vocabulary size |
+| `config.json` | Released settings: the model block (sample rate, windows, voices, vocabulary size) plus the phonemiser identity, letter vocabulary, and ONNX inputs/outputs that the web demo reads |
 | `text.py` | The front end module, verbatim (the web demo runs it in the browser) |
 | `samples/` | The audio on this page |
 

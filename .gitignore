@@ -12,7 +12,7 @@ runs/
 .env
 ops/
 web/public/assets/
-web/.wrangler/
+.wrangler/
 node_modules/
 
 # local research data (not part of the release)
