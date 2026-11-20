@@ -160,17 +160,16 @@ hf upload brenorb/tiny-broca "$MK" . --type model \
 
 echo "== web demo"
 if command -v wrangler >/dev/null; then
-  bash web/fetch_assets.sh .
+  bash web/fetch_assets.sh "$PWD"
 else
   echo "   wrangler not installed; skipping the web demo (repo and model are uploaded)"
   echo "published. The repos stay private until the public flip."
   exit 0
 fi
-if wrangler pages project get tiny-broca-demo >/dev/null 2>&1; then
-  wrangler pages deploy web/public --project-name tiny-broca-demo
-else
-  wrangler pages project create tiny-broca-demo
-  wrangler pages deploy web/public --project-name tiny-broca-demo
+PAGES_PROJECT="tiny-broca-demo"
+if ! wrangler pages project list 2>/dev/null | grep -q "$PAGES_PROJECT"; then
+  wrangler pages project create "$PAGES_PROJECT"
 fi
+wrangler pages deploy web/public --project-name "$PAGES_PROJECT"
 
 echo "published. The repos stay private until the public flip."
