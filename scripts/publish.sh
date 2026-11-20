@@ -129,7 +129,8 @@ echo "== stage model"
 mkdir -p "$MK/onnx" "$MK/samples"
 cp runs/tiny-broca-ft2/inference.pt "$MK/tiny-broca.pt"
 cp releases/model.onnx "$MK/onnx/model.onnx"
-cp runs/tiny-broca-ft2/config.json "$MK/config.json"
+"$PY" scripts/build_release_config.py --config runs/tiny-broca-ft2/config.json --checkpoint runs/tiny-broca-ft2/inference.pt --output releases/config.json
+cp releases/config.json "$MK/config.json"
 cp src/tiny_broca/text.py "$MK/text.py"
 "$PY" - "$MK" <<'PYEOF'
 import json, shutil, sys
