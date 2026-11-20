@@ -63,7 +63,7 @@ the model and the front end entirely client-side.
 
 - Weights: https://huggingface.co/brenorb/tiny-broca
 - Dataset: https://huggingface.co/datasets/brenorb/tiny-broca
-- Demo: (published with the release)
+- Demo: <https://tiny-broca-demo.pages.dev> (runs entirely in the browser)
 
 ## Repository layout
 
