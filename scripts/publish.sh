@@ -8,8 +8,8 @@
 # both repositories, and deploys the web demo to Cloudflare Pages.
 #
 # Prerequisites: scripts/run_pipeline.sh has run to completion, `hf` is
-# authenticated, and `wrangler` is installed. The repos stay private until the
-# final public flip, which is done by hand.
+# authenticated, and `wrangler` is installed. All three repositories are
+# public (Hugging Face model, Hugging Face dataset, this one on GitHub).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PY=.venv/bin/python
@@ -163,7 +163,7 @@ if command -v wrangler >/dev/null; then
   bash web/fetch_assets.sh "$PWD"
 else
   echo "   wrangler not installed; skipping the web demo (repo and model are uploaded)"
-  echo "published. The repos stay private until the public flip."
+  echo "published. The repositories are public."
   exit 0
 fi
 PAGES_PROJECT="tiny-broca-demo"
@@ -172,4 +172,4 @@ if ! wrangler pages project list 2>/dev/null | grep -q "$PAGES_PROJECT"; then
 fi
 wrangler pages deploy web/public --project-name "$PAGES_PROJECT"
 
-echo "published. The repos stay private until the public flip."
+echo "published. The repositories are public."
