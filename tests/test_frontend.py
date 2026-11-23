@@ -221,6 +221,50 @@ class NormaliserV2Tests(unittest.TestCase):
             ("Os chefes e os botes.", "os chefes e os botes."),
             ("Tu deves pagar.", "tu deves pagar."),
             ("Os coaches e os posts.", "os coutches e os pôstes."),
+            ("Felizes, os peixes comem ganaches nas osmoses.", "felizes, os peixes comem ganaches nas osmoses."),
+            ("Os matches e os remixes.", "os métches e os rimíxes."),
+        ])
+
+    def test_words_that_are_also_portuguese_stay_portuguese(self):
+        self.check([
+            ("Preencha, date e assine o formulário.", "preencha, date e assine o formulário."),
+            ("Basta que um date o documento.", "basta que um date o documento."),
+            ("Espero que a empresa prime pela transparência.", "espero que a empresa prime pela transparência."),
+            ("Esperamos que a Amazon prime pelo bom atendimento.", "esperamos que a ámazon prime pelo bom atendimento."),
+            ("Viajamos de Paris a Nice de trem.", "viajamos de paris a nice de trem."),
+            ("Cannes é mais cara que Nice.", "cannes é mais cara que nice."),
+            ("A fatura do set/2026 está em aberto.", "a fatura do set dois mil e vinte e seis está em aberto."),
+            ("Acertei 8 de dez questões na prova.", "acertei oito de dez questões na prova."),
+            ("Ô home, deixa de besteira!", "ô home, deixa de besteira!"),
+        ])
+
+    def test_ambiguous_words_are_english_inside_a_phrase(self):
+        self.check([
+            ("Ela marcou um date.", "ela marcou um deite."),
+            ("O primeiro date foi num parque.", "o primeiro deite foi num parque."),
+            ("Venceu no segundo set.", "venceu no segundo séte."),
+            ("Ganhou por dois sets a zero.", "ganhou por dois sétes a zero."),
+            ("Ela é super nice.", "ela é super náice."),
+            ("Assino o Amazon Prime.", "assino o ámazon práime."),
+            ("A série estreia na Amazon Prime Video.", "a série estreia na ámazon práime vídeo."),
+            ("A memória ram do computador.", "a memória râmi do computador."),
+            ("Volte para a home do site.", "volte para a rôme do saite."),
+        ])
+
+    def test_loanwords_in_capitals_are_not_spelled(self):
+        self.check([
+            ("Aproveite a BLACK FRIDAY hoje.", "aproveite a bléque fráidei hoje."),
+            ("Tudo com 50% OFF hoje.", "tudo com cinquenta por cento ófe hoje."),
+            ("O TRADE-OFF FOI RUIM PARA TODA A EQUIPE", "o treidófe foi ruim para toda a equipe"),
+            ("A memória RAM e o CPF.", "a memória râmi e o cê pê éfe."),
+        ])
+
+    def test_loanword_matching_edges(self):
+        self.check([
+            ("O 'site' caiu.", "o 'saite' caiu."),
+            ("Comprei um İPHONE.", "comprei um aifone."),
+            ("Comprei na black  friday.", "comprei na bléque fráidei."),
+            ("Georges Méliès foi pioneiro.", "jórjes mélies foi pioneiro."),
         ])
 
     def test_addresses(self):

@@ -424,11 +424,9 @@ ok	oquêi
 bye	bai
 sorry	sóri
 wow	uau
-nice	náice
 cool	cul
 top	tópe
 vibe	váibe
-date	deite
 match	métche
 ranking	rânquin
 level	lével
@@ -692,7 +690,6 @@ unicode	iunicôude
 assembly	assémbli
 debian	débian
 saas	sás
-ram	râmi
 mint	mínte
 signal	síguinal
 copilot	copáilote
@@ -720,7 +717,6 @@ stripe	istráipe
 rappi	rápi
 booking	búquin
 tripadvisor	tripadváizor
-prime	práime
 prime video	práime vídeo
 deezer	dízer
 soundcloud	sáunde cláude
@@ -929,7 +925,6 @@ flat	fléte
 duplex	dúplex
 triplex	tríplex
 hall	ról
-home	rôme
 home theater	rôme tíater
 home care	rôme quér
 deck	déque
@@ -1028,7 +1023,6 @@ self service	sélfe sérvice
 fast-food	fést fúde
 milk-shake	milquexeique
 hot-dog	róte dógue
-set	séte
 ferry	férri
 remake	rimêique
 reboot	ribúte
@@ -1132,6 +1126,87 @@ mozzarella	mussaréla
 curry	cúrri
 hamburguer	hambúrguer
 funghi	fúngui
+coaches	coutches
+matches	métches
+crushes	crãxes
+flashes	fléxes
+crashes	créxes
+patches	pétches
+pitches	pítches
+branches	bréntches
+brunches	brãnches
+hatches	rétchis
+smartwatches	ismartuótches
+remixes	rimíxes
+inboxes	ínboxes
+xboxes	équisbóxes
+businesses	bíznesses
+bosses	bósses
+misses	mísses
+touches	tátches
+sets	sétes
+set point	séte póinte
+o primeiro set	o primeiro séte
+no primeiro set	no primeiro séte
+do primeiro set	do primeiro séte
+num date	num deite
+meu date	meu deite
+nesse date	nesse deite
+no date	no deite
+do date	do deite
+no primeiro date	no primeiro deite
+meu primeiro date	meu primeiro deite
+nosso primeiro date	nosso primeiro deite
+super nice	super náice
+tão nice	tão náice
+memória ram	memória râmi
+home do site	rôme do saite
+home page	rôme pêidje
+homepage	rômepêidje
+amazon prime	ámazon práime
+no segundo set	no segundo séte
+no terceiro set	no terceiro séte
+no quarto set	no quarto séte
+no quinto set	no quinto séte
+no último set	no último séte
+é bem nice	é bem náice
+marcou um date	marcou um deite
+marquei um date	marquei um deite
+marcamos um date	marcamos um deite
+marcar um date	marcar um deite
+tive um date	tive um deite
+teve um date	teve um deite
+o primeiro date foi	o primeiro deite foi
+trade- off	treidófe
+trade- ófe	treidófe
+trade - ófe	treidófe
+amazon prime video	ámazon práime vídeo
+amazon prime pelo	ámazon prime pelo
+amazon prime pela	ámazon prime pela
+amazon prime por	ámazon prime por
+prime time	práime táime
+georges	jórjes
+james rodríguez	rámes rodrígues
+james rodriguez	rámes rodrígues
+post mortem	póste mórtem
+non plus ultra	non plús últra
+blushes	blâxes
+stresses	istrésses
+twitches	tuítches
+rolexes	rólexes
+duplexes	dúplexes
+triplexes	tríplexes
+statuses	istátus
+glosses	glósses
+stop losses	istópe lósses
+queries	quéris
+proxies	próquicis
+lobbies	lóbis
+whiskies	uísques
+deliveries	delíveris
+barmen	bármen
+hobby	róbi
+hobbies	róbis
 """
 
 # Acronyms, matched case-sensitively in upper case (a lower-case "s" plural is
@@ -1262,6 +1337,7 @@ PEC	péque
 DJ	didjêi
 MP3	eme pê três
 MP4	eme pê quatro
+OFF	ófe
 """
 
 _ABBREVIATIONS = (
@@ -1337,6 +1413,7 @@ def _read_tsv(source):
 
 LOANWORDS = {k.lower(): v for k, v in _read_tsv(_LOANWORDS_TSV).items()}
 ACRONYMS = _read_tsv(_ACRONYMS_TSV)
+_LOANWORD_PARTS = frozenset(word for key in LOANWORDS for word in key.split())
 
 # Nouns that make a number feminine ("duas horas", "duzentas pessoas"); other
 # nouns ending in -a are feminine too unless listed in _MASCULINE_A.
@@ -1925,7 +2002,7 @@ def _acronym_reading(token):
     if any(c.isdigit() for c in core):
         parts = re.findall(r"[A-Z]+|\d+", core)
         return " ".join(_spell_letters(p) if p.isalpha() else number_words(int(p)) for p in parts) + suffix
-    if _pronounceable(core):
+    if _pronounceable(core) or (len(core) >= 4 and {core.lower(), token.lower()} & _LOANWORD_PARTS):
         return core.lower() + suffix
     return _spell_letters(core) + suffix
 
@@ -1992,14 +2069,15 @@ def _url(m):
 
 
 _LOANWORD_KEYS = sorted(LOANWORDS, key=len, reverse=True)
-# English adds -es only after s, x, z, ch and sh ("coaches"); anywhere else
-# key + es is a Portuguese word: postes, botes, chefes, deves.
-_LOANWORD = re.compile(r"(?<![\w'-])(" + "|".join(re.escape(k) for k in _LOANWORD_KEYS)
-                       + r")(s|(?<=[sxz])es|(?<=[cs]h)es)?(?![\w'-])", re.IGNORECASE)
+# A loanword is a word of the table, or a word of the table + s. English
+# plurals in -es are listed in the table: no ending can tell "coaches" from
+# the Portuguese "felizes", "peixes", "ganaches" or "osmoses".
+_LOANWORD = re.compile(r"(?<![\w-])(?<!\w')(" + "|".join(re.escape(k).replace(r"\ ", " +") for k in _LOANWORD_KEYS)
+                       + r")(s)?(?![\w-])(?!'\w)", re.IGNORECASE)
 
 
 def _loanword(m):
-    respelled = LOANWORDS[m.group(1).lower()]
+    respelled = LOANWORDS[" ".join(m.group(1).lower().split())]
     if m.group(2):
         respelled = respelled + ("s" if respelled[-1] in "aeiouáéíóúâêôãõ" or not respelled.endswith("s") else "")
     return respelled
@@ -2108,6 +2186,7 @@ def spoken_form(text):
     text = _NUMBER_SIGN.sub(" número ", text)
     text = _ORDINAL_SIGN.sub(_ordinal_sign, text)
     text = unicodedata.normalize("NFKC", text).translate(_QUOTE_TRANSLATION)
+    text = text.replace("İ", "I").replace("ı", "i")  # re.IGNORECASE folds them to i; .lower() does not
     text = text.replace("⁄", "/").replace("​", "").replace("️", "").replace("‍", "")
     text = text.replace("ª", " a").replace("º", " o")
     # Two hyphens and three dots are the ASCII forms of the inventory symbols;
