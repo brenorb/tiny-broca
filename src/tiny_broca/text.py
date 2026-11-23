@@ -1190,6 +1190,7 @@ def _time_hm(m):
     return m.group(0) if words is None else " " + words + " "
 
 
+_CLOCK_CONTEXT = frozenset(("às", "as", "das", "até", "desde", "pelas", "à", "a", "para", "entre"))
 # Words before "1h30" that make it a duration ("tem 1h30", "em 2h15"); otherwise it is a time of day.
 _DURATION_CONTEXT = frozenset(("em", "durante", "por", "dura", "durou", "duram", "leva", "levou", "levam", "tem",
                                "teve", "têm", "há", "faz", "fez", "após", "mais", "menos", "quase", "cerca", "só",
@@ -1199,7 +1200,9 @@ _DURATION_CONTEXT = frozenset(("em", "durante", "por", "dura", "durou", "duram",
 def _clocks(text):
     def replace(m):
         before = _previous_word(text, m.start())
-        duration = before in _DURATION_CONTEXT or bool(re.match(r"\s+de\s+(?!manhã|tarde|noite|madrugada)", text[m.end():]))
+        duration = before in _DURATION_CONTEXT or (
+            before not in _CLOCK_CONTEXT
+            and bool(re.match(r"\s+de\s+(?!manhã|tarde|noite|madrugada|\d)", text[m.end():])))
         words = _clock_words(int(m.group(1)), int(m.group(2)), False, duration=duration)
         return m.group(0) if words is None else " " + words + " "
     return _CLOCK.sub(replace, text)
