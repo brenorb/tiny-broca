@@ -32,14 +32,14 @@ from qwen_tts import Qwen3TTSModel
 BASE_MODEL = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
 VOICE_REFS = {"F1": "F1", "M1": "M1"}  # selected Common Voice clones (data/refs)
 
-from tiny_broca.text import wer_normalize
+from tiny_broca.text import spoken_form, spoken_normalize, wer_normalize
 
 
-def load_corpus(corpus_dir: Path):
+def load_corpus(corpus_dir: Path, batches=(1, 2, 3)):
     import pyarrow.parquet as pq
 
     sentences = []
-    for batch in (1, 2, 3):
+    for batch in batches:
         for path in sorted(corpus_dir.glob(f"batch{batch}/*.parquet")):
             table = pq.read_table(path)
             for i, (text, source) in enumerate(zip(table.column("text").to_pylist(),
@@ -68,13 +68,29 @@ def main():
     ap.add_argument("--threads", type=int, default=12)
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--seed", type=int, default=20261117)
+    ap.add_argument("--batches", type=int, nargs="+", default=[1, 2, 3], help="Corpus batches to read")
+    ap.add_argument("--teacher-text", choices=("raw", "spoken"), default="raw",
+                    help="raw: the teacher reads the written sentence (v0); spoken: it reads the front end's "
+                         "spoken_form(), so every number, symbol and loanword is said exactly as the student's "
+                         "tokens spell it, and quality control compares words without masking numbers")
+    ap.add_argument("--max-wer", type=float, default=0.15)
     args = ap.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
     torch.set_num_threads(args.threads)
 
     refs = json.loads((args.refs / "voices.json").read_text())
-    sentences = load_corpus(args.corpus)
+    sentences = load_corpus(args.corpus, args.batches)
+    if args.teacher_text == "spoken":
+        for s in sentences:
+            s["written"], s["text"] = s["text"], spoken_form(s["text"])
+
+    def clip_wer(text, transcript):
+        if not transcript:
+            return 1.0
+        if args.teacher_text == "spoken":
+            return wer(spoken_normalize(text), spoken_normalize(transcript))
+        return wer(wer_normalize(text), wer_normalize(transcript))
     print(f"corpus: {len(sentences)} sentences", flush=True)
 
     print("loading whisper small ...", flush=True)
@@ -144,8 +160,8 @@ def main():
                 path = audio_dir / f"{cid}.flac"
                 sf.write(path, wave, sr)
                 transcript = transcribe(path)
-                w = wer(wer_normalize(s["text"]), wer_normalize(transcript)) if transcript else 1.0
-                ok = (0.5 <= seconds <= 35.0) and (w < 0.15) and transcript
+                w = clip_wer(s["text"], transcript)
+                ok = (0.5 <= seconds <= 35.0) and (w < args.max_wer) and transcript
                 conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                              (cid, voice, s["batch"], s["split"], s["text"],
                               round(seconds, 3), sr, round(gen / len(chunk), 2),
@@ -204,8 +220,8 @@ def main():
                 path = audio_dir / f"{cid}.flac"
                 sf.write(path, wave, sr)
                 transcript = transcribe(path)
-                w = wer(wer_normalize(s["text"]), wer_normalize(transcript)) if transcript else 1.0
-                ok = (0.5 <= seconds <= 35.0) and (w < 0.15) and transcript
+                w = clip_wer(s["text"], transcript)
+                ok = (0.5 <= seconds <= 35.0) and (w < args.max_wer) and transcript
                 conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                              (cid, voice, s["batch"], s["split"], s["text"],
                               round(seconds, 3), sr, round(gen / len(chunk), 2),

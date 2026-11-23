@@ -165,7 +165,7 @@ def main():
         import jiwer
         from faster_whisper import WhisperModel
         asr = WhisperModel(args.asr_model, device="cpu", compute_type="int8", cpu_threads=12)
-        from .text import wer_normalize
+        from .text import spoken_normalize, wer_normalize
         normalize = wer_normalize
 
         def transcribe(path):
@@ -177,11 +177,14 @@ def main():
             return " ".join(segment.text.strip() for segment in segments).strip()
         for record in samples:
             truth = normalize(record["text"])
+            spoken = spoken_normalize(record["text"])
             for kind in ("generated", "reference"):
                 if kind in record:
                     hypothesis = transcribe(audio_dir / record[kind])
                     record[kind + "_transcript"] = hypothesis
                     record[kind + "_wer"] = round(float(jiwer.wer(truth, normalize(hypothesis) or "<empty>")), 4)
+                    # Numbers and money count too: both sides go through the front end.
+                    record[kind + "_spoken_wer"] = round(float(jiwer.wer(spoken, spoken_normalize(hypothesis) or "<empty>")), 4)
             print(json.dumps({"transcribed": record["id"], "generated_wer": record.get("generated_wer"), "reference_wer": record.get("reference_wer")}), flush=True)
 
     def mean(group, voice, key):
@@ -193,7 +196,7 @@ def main():
         for label, voices in (("all", c.speakers), *((v, (v,)) for v in c.speakers)):
             summary[group][label] = {"samples": sum(s["group"] == group and s["voice"] in voices for s in samples),
                                      **{key: mean(group, voices, key) for key in
-                                        ("generated_wer", "reference_wer", "duration_ratio", "pause_ratio", "mel_dtw", "generated_pitch_std_semitones",
+                                        ("generated_wer", "reference_wer", "generated_spoken_wer", "reference_spoken_wer", "duration_ratio", "pause_ratio", "mel_dtw", "generated_pitch_std_semitones",
                                          "reference_pitch_std_semitones", "generated_voiced_fraction", "reference_voiced_fraction")}}
     mismatched = [s["id"] for s in samples if s.get("tokens_match_annotation") is False]
     report = {"tag": args.tag, "checkpoint": str(args.checkpoint), "step": checkpoint_step,

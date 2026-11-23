@@ -23,7 +23,10 @@ from pathlib import Path
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--audio", type=Path, default=Path("data/audio"))
+    ap.add_argument("--audio", type=Path, nargs="+", default=[Path("data/audio")],
+                    help="Generation directories (state.db + audio/); a clip id may appear in only one")
+    ap.add_argument("--exclude", type=Path, help="File of b<batch>_<split>_<position> sentence keys whose clips are left out "
+                    "(sentences superseded by a regenerated batch)")
     ap.add_argument("--corpus", type=Path, default=Path("data/corpus"))
     ap.add_argument("--refs", type=Path, default=Path("data/refs"))
     ap.add_argument("--output", type=Path, default=Path("data/dataset"))
@@ -33,17 +36,27 @@ def main():
     import pyarrow.parquet as pq
 
     refs = json.loads((args.refs / "voices.json").read_text())
-    conn = sqlite3.connect(args.audio / "state.db")
-    clips = conn.execute(
-        "SELECT clip_id, voice, batch, split, text, seconds, sr, wer, transcript,"
-        " gen_seconds, rtf FROM clips WHERE status='ok'").fetchall()
-    total = conn.execute("SELECT COUNT(*) FROM clips").fetchone()[0]
-    conn.close()
+    excluded = set(args.exclude.read_text().split()) if args.exclude else set()
+    clips, total, audio_dir, dropped = [], 0, {}, 0
+    for directory in args.audio:
+        conn = sqlite3.connect(directory / "state.db")
+        for row in conn.execute("SELECT clip_id, voice, batch, split, text, seconds, sr, wer, transcript,"
+                                " gen_seconds, rtf FROM clips WHERE status='ok'").fetchall():
+            cid, batch, split = row[0], row[2], row[3]
+            if f"b{batch}_{split}_{int(cid.rsplit('_', 1)[1]):05d}" in excluded:
+                dropped += 1
+                continue
+            if cid in audio_dir:
+                raise ValueError(f"clip {cid} is in both {audio_dir[cid]} and {directory}")
+            audio_dir[cid] = directory
+            clips.append(row)
+        total += conn.execute("SELECT COUNT(*) FROM clips").fetchone()[0]
+        conn.close()
 
     # (batch, split, file row position) -> source; the generator indexed
     # sentences the same way.
     source_map = {}
-    for batch in (1, 2, 3):
+    for batch in range(1, 10):
         for path in sorted(args.corpus.glob(f"batch{batch}/*.parquet")):
             table = pq.read_table(path)
             for i, source in enumerate(table.column("source").to_pylist()):
@@ -54,7 +67,7 @@ def main():
     missing_audio = missing_source = 0
     for cid, voice, batch, split, text, seconds, sr, wer, transcript, gen_seconds, rtf in clips:
         index = int(cid.rsplit("_", 1)[1])
-        path = args.audio / "audio" / f"{cid}.flac"
+        path = audio_dir[cid] / "audio" / f"{cid}.flac"
         if not path.is_file():
             missing_audio += 1
             print(f"skip {cid}: audio file missing", file=sys.stderr)
@@ -72,8 +85,8 @@ def main():
             "split": split,
             "text": text,
             "source": source,
-            "source_license": "cc0-1.0" if source == "cv" else "project-own",
-            "source_url": "https://common-voice.org/datasets" if source == "cv" else None,
+            "source_license": "cc0-1.0" if source.startswith("cv") else "project-own",
+            "source_url": "https://common-voice.org/datasets" if source.startswith("cv") else None,
             "voice": voice,
             "audio": {"bytes": path.read_bytes(), "path": f"audio/{cid}.flac",
                       "sampling_rate": sr},
@@ -108,7 +121,7 @@ def main():
         hours = sum(r["duration_seconds"] for r in rows) / 3600
         summary[split] = {"clips": len(rows), "hours": round(hours, 3),
                           "file": str(out), "mb": round(out.stat().st_size / 1e6, 1)}
-    summary.update({"generated_clips": len(clips), "state_db_rows": total,
+    summary.update({"generated_clips": len(clips), "state_db_rows": total, "excluded_superseded": dropped,
                     "skipped_missing_audio": missing_audio,
                     "skipped_missing_source": missing_source,
                     "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
