@@ -574,6 +574,564 @@ embratel	embratél
 bovespa	bovéspa
 infraero	infraéro
 covid	côvide
+on-line	onlaine
+kubernetes	cubernétis
+docker	dóquer
+overfitting	overfítin
+underfitting	anderfítin
+database	dêitabeice
+dataset	dêitasséte
+data center	dêita cênter
+data science	dêita sáience
+data lake	dêita lêique
+deep learning	dípe lérnin
+fine-tuning	fáine túnin
+fine tuning	fáine túnin
+pipeline	paipláine
+python	páiton
+javascript	javascrípte
+typescript	taipiscrípte
+github	guíte râbe
+gitlab	guíte lébe
+git	guíte
+commit	comíte
+merge	mérgi
+pull request	pul riquéste
+branch	bréntche
+dev	déve
+devops	devópis
+full stack	ful istéque
+fullstack	ful istéque
+full-stack	ful istéque
+script	iscrípte
+prompt	prômpite
+plugin	plúguin
+widget	uídjete
+driver	dráiver
+firmware	fírmuer
+malware	máluer
+spyware	ispáiuer
+ransomware	rânsomuer
+phishing	fíxin
+firewall	fáieruól
+proxy	próquici
+server	sérver
+host	rôste
+hosting	rôstin
+cache	quéxe
+cluster	clâster
+container	contêiner
+endpoint	endipóinte
+payload	peilôude
+query	quéri
+runtime	rantáime
+stack	istéque
+thread	tréde
+array	arrêi
+string	istríngue
+loop	lúpe
+bit	bíte
+byte	báite
+kilobyte	quilobáite
+megabyte	megabáite
+gigabyte	gigabáite
+terabyte	terabáite
+megabit	megabíte
+gigabit	gigabíte
+pixel	píquicel
+transformer	transfórmer
+embedding	embédin
+benchmark	bêntchimarque
+dashboard	déxibórde
+scrum	iscrâm
+sprint	isprínte
+kanban	cânban
+roadmap	rôudemépe
+backlog	béquelógue
+workflow	uórqueflou
+onboarding	onbórdin
+feature	fítcher
+release	rilíce
+rollback	rólbéque
+patch	pétche
+password	pássuorde
+username	iúzerneime
+browser	bráuzer
+touchscreen	tátchiscrín
+router	ráuter
+vlog	vlógue
+unboxing	anbóquicin
+review	riviú
+gameplay	gueimeplêi
+lag	légue
+ping	píngue
+noob	núbe
+skin	isquín
+steam	istím
+desktop	déskitópe
+wireless	uáierles
+power bank	páuer bénque
+screenshot	iscrínxóte
+scanner	iscâner
+inbox	ínbox
+downgrade	dáungreide
+restart	ristárte
+setup	setápe
+crash	créxe
+zap	zápe
+joystick	djóistique
+arcade	arquêide
+mousepad	máusepéde
+display	displêi
+blu-ray	blu rêi
+bluray	blu rêi
+flash	fléxe
+log	lógue
+kernel	kérnel
+unicode	iunicôude
+assembly	assémbli
+debian	débian
+saas	sás
+ram	râmi
+mint	mínte
+signal	síguinal
+copilot	copáilote
+gemini	djémini
+claude	clôde
+anthropic	antrópique
+deepseek	dípe síque
+midjourney	mídi djârni
+nvidia	envídia
+powerpoint	páuer póinte
+office	ófice
+word	uórde
+photoshop	fotoxópe
+teams	tíns
+slack	isléque
+notion	nôuxon
+skype	iscáipe
+tinder	tínder
+snapchat	isnépixéte
+spacex	ispêicex
+oracle	óracou
+adobe	adôbi
+paypal	peipáu
+stripe	istráipe
+rappi	rápi
+booking	búquin
+tripadvisor	tripadváizor
+prime	práime
+prime video	práime vídeo
+deezer	dízer
+soundcloud	sáunde cláude
+walmart	uólmarte
+ikea	iquéia
+reebok	ribóque
+gucci	gútchi
+louis vuitton	luí vitôn
+rolex	rólex
+porsche	pórche
+audi	áudi
+volkswagen	volquisváguen
+ford	fórde
+chevrolet	chevrolé
+honda	rônda
+toyota	toióta
+hyundai	riundái
+nissan	níssan
+jeep	djípe
+renault	renô
+peugeot	pejô
+citroën	citroén
+citroen	citroén
+mitsubishi	mitsubíxi
+lamborghini	lamborguíni
+fiat	fiáte
+pepsi	pépsi
+heineken	ráineken
+budweiser	budváizer
+nutella	nutéla
+oreo	ório
+pizza hut	pítsa râte
+domino's	dóminos
+outback	autibéque
+bob's	bóbis
+sony	sôni
+philips	fílips
+dell	déu
+acer	êicer
+xiaomi	xiaomí
+huawei	ruauêi
+nokia	nóquia
+fortnite	fórtenaite
+minecraft	máinecrafte
+roblox	róblox
+valorant	válorante
+free fire	fri fáier
+league of legends	líg ofe légendes
+counter-strike	cáunter istráique
+counter strike	cáunter istráique
+mastercard	máster cárde
+american express	américan esprés
+vimeo	vímeo
+bing	bíngue
+yandex	iândex
+trump	trâmpi
+biden	báiden
+elon	ílon
+musk	mâsque
+bill gates	bíu gueites
+steve jobs	istívi djóbis
+zuckerberg	zúquerbergue
+shakespeare	xéquispir
+beatles	bítous
+michael	máicou
+jackson	djéquisson
+john	djón
+james	djêimes
+george	djórdji
+justin	djâstin
+bieber	bíber
+kevin	quévin
+kelly	quéli
+william	uílian
+willian	uílian
+wesley	uésli
+wilson	uílson
+wagner	vágner
+chris	crís
+donald	dônald
+tony	tôni
+henry	rênri
+peter	píter
+robert	róberte
+oliver	óliver
+taylor swift	têilor suífte
+beyoncé	bionsê
+beyonce	bionsê
+madonna	madôna
+rihanna	riána
+lady gaga	lêidi gága
+drake	drêique
+eminem	êminem
+buffett	bâfete
+parkinson	párquinson
+eiffel	êifel
+seattle	siátou
+tennessee	tenessí
+las vegas	lás végas
+vegas	végas
+miami	maiâmi
+boston	bóston
+texas	téquissas
+manhattan	manréten
+brooklyn	brúclin
+silicon valley	sílicon váli
+times square	táimis iscuér
+taiwan	taiuã
+york	iórque
+stablecoin	istêibou cóin
+altcoin	áute cóin
+dogecoin	dógui cóin
+staking	istêiquin
+day trade	dêi treide
+day trader	dêi trêider
+swing trade	suíngue treide
+hedge	rédji
+hedge fund	rédji fânde
+spread	ispréde
+stop loss	istópe lós
+private equity	práivete écuiti
+venture capital	vêntcher cápital
+valuation	valuêixon
+equity	écuiti
+cash	quéxe
+cash flow	quéxe flôu
+payback	peibéque
+breakeven	breiquíven
+funding	fândin
+compliance	complâience
+rating	rêitin
+holding	rôldin
+leasing	lízin
+franchising	frenxáizin
+factoring	fáctorin
+dumping	dâmpin
+lockdown	loquedáun
+headhunter	réde rânter
+board	bórde
+stakeholder	isteiquirrôlder
+performance	perfórmance
+telemarketing	telemárquetin
+marketplace	márquetepleice
+dropshipping	dropxípin
+lead	líde
+target	tárguete
+pitch	pítche
+burnout	bârnáute
+commodity	comóditi
+commodities	comóditis
+outsourcing	autsórcin
+offshore	ofxór
+overbooking	ôuverbúquin
+cyber monday	sáiber mândei
+voucher	váucher
+manager	mânadjer
+yuan	iuã
+impeachment	impítchimente
+bike	báique
+e-bike	ibáique
+surf	sârfe
+windsurf	uínde sârfe
+kitesurf	cáite sârfe
+wakeboard	uêique bórde
+snowboard	isnôu bórde
+snowboarder	isnôu bórder
+snowboarding	isnôu bórdin
+trekking	trékin
+rafting	ráftin
+parkour	parcúr
+jiu-jitsu	jiujítsu
+jiu jitsu	jiujítsu
+pit stop	píte istópe
+pole position	pôu posíxon
+rugby	rúgbi
+golf	gólfe
+frisbee	frísbi
+paintball	pêintból
+sport	ispórte
+spinning	ispínin
+personal	pérsonal
+fit	fíte
+whey	uêi
+whey protein	uêi prôutin
+low carb	lôu cárbe
+vegan	végan
+peeling	pílin
+piercing	pírcin
+tattoo	tatu
+yoga	ióga
+spa	ispá
+legging	léguin
+blush	blâxe
+gloss	glós
+primer	práimer
+oversized	ôuversáized
+fashion	féxon
+plus size	plâs sáize
+plus	plâs
+make	mêique
+air fryer	ér fráier
+airfryer	ér fráier
+closet	clósete
+loft	lófte
+flat	fléte
+duplex	dúplex
+triplex	tríplex
+hall	ról
+home	rôme
+home theater	rôme tíater
+home care	rôme quér
+deck	déque
+resort	rizórte
+hostel	rôstel
+tour	túr
+city tour	síti túr
+city	síti
+jet lag	djéte légue
+free shop	fri xópe
+duty free	diúti fri
+jet-ski	djéte isqui
+cooler	cúler
+blackout	blecáute
+laser	lêizer
+scooter	iscúter
+pickup	picápe
+pick-up	picápe
+hatch	rétchi
+diesel	dísel
+airbag	érbégue
+motorhome	motor rôme
+motocross	motocrós
+minivan	minivã
+test drive	tést dráive
+check-up	xecápe
+checkup	xecápe
+stand	istênde
+stand-by	istendibái
+standby	istendibái
+shop	xópe
+barber shop	bárber xópe
+store	istór
+play	plêi
+stop	istópe
+pop-up	popápe
+popup	popápe
+motoboy	motobói
+office boy	ófice bói
+cowboy	caubói
+playboy	pleibói
+boy	bói
+baby	bêibi
+baby shower	bêibi xáuer
+teen	tín
+kids	quídis
+miss	mís
+love	lâve
+gay	guêi
+sexy	séqui
+drag	dréque
+drag queen	dréque quín
+nude	núde
+free	fri
+full	ful
+full time	ful táime
+part-time	párti táime
+timing	táimin
+boss	bós
+light	láite
+lite	láite
+diet	dáiete
+premium	prêmium
+vintage	víntidji
+dealer	díler
+barman	bármen
+bartender	bartênder
+close	clôuse
+kit	quíte
+status	istátus
+banner	bâner
+boom	bum
+tag	tégue
+the	dâ
+voice	vóice
+music	miúzique
+street	istríte
+studio	istúdio
+graffiti	grafíti
+hipster	rípster
+indie	índi
+junior	júnior
+matrix	mêitrix
+maps	mépes
+walkman	uóquimen
+pub	pâbe
+cheerleader	tchirlíder
+black	bléque
+power	páuer
+green card	grín cárde
+big tech	bigue téque
+tech	téque
+center	cênter
+shopping center	xópin cênter
+self service	sélfe sérvice
+fast-food	fést fúde
+milk-shake	milquexeique
+hot-dog	róte dógue
+set	séte
+ferry	férri
+remake	rimêique
+reboot	ribúte
+sitcom	sítcon
+blockbuster	blóquebâster
+best-seller	bést séler
+best seller	bést séler
+heavy metal	révi métau
+punk	pânque
+reggae	régue
+soul	sôu
+gospel	góspel
+trap	trépe
+folk	fóuque
+country	cântri
+backstage	béquistêidji
+fandom	féndom
+hype	ráipe
+cringe	crínji
+flop	flópe
+shippar	xipár
+stalkear	istolquiár
+hackear	requiár
+hackeou	requiôu
+hackeado	requiádo
+hackeada	requiáda
+hackearam	requiáram
+hackeando	requiândo
+hacking	réquin
+tweet	tuíte
+retweet	rituíte
+reels	ríus
+trend	trénde
+trending	tréndin
+gif	guífe
+mood	múde
+random	rândom
+bad	béde
+chill	tchíl
+feat	fíte
+beat	bíte
+groove	grúve
+swing	suíngue
+chef	xéfe
+buffet	bufê
+gourmet	gurmê
+reveillon	reveiôn
+réveillon	reveiôn
+champagne	xampânhe
+chantilly	xantilí
+croissant	croassã
+fondue	fondí
+petit gateau	petí gatô
+mousse	músse
+bouquet	buquê
+boutique	butíque
+lingerie	lanjerrí
+necessaire	necessér
+nécessaire	necessér
+déjà vu	dejavú
+deja vu	dejavú
+ballet	balé
+cappuccino	capuchíno
+espresso	esprésso
+macchiato	maquiáto
+latte	láte
+smoothie	ismúdi
+whisky	uísque
+whiskey	uísque
+gin	djím
+chopp	xópe
+cheddar	xédar
+sushi	súxi
+sashimi	saxími
+temaki	temáqui
+yakisoba	iaquissóba
+ramen	râmen
+kebab	quebábe
+nachos	nátchos
+pickles	píquous
+snack	isnéque
+shoyu	xôiu
+wasabi	uassábi
+gyoza	guiôza
+poke	pôque
+bowl	bôul
+cream cheese	crím xís
+catchup	quétchupe
+barbecue	barbequiú
+roast beef	rôste bífe
+wrap	répe
+bagel	bêiguel
+panini	paníni
+risotto	rizóto
+spaghetti	espaguéte
+gnocchi	nhóqui
+bruschetta	brusquéta
+tiramisu	tiramissú
+prosecco	proséco
+mozzarella	mussaréla
+curry	cúrri
+hamburguer	hambúrguer
+funghi	fúngui
 """
 
 # Acronyms, matched case-sensitively in upper case (a lower-case "s" plural is
@@ -1434,8 +1992,10 @@ def _url(m):
 
 
 _LOANWORD_KEYS = sorted(LOANWORDS, key=len, reverse=True)
-_LOANWORD = re.compile(r"(?<![\w'-])(" + "|".join(re.escape(k) for k in _LOANWORD_KEYS) + r")(es|s)?(?![\w'-])",
-                       re.IGNORECASE)
+# English adds -es only after s, x, z, ch and sh ("coaches"); anywhere else
+# key + es is a Portuguese word: postes, botes, chefes, deves.
+_LOANWORD = re.compile(r"(?<![\w'-])(" + "|".join(re.escape(k) for k in _LOANWORD_KEYS)
+                       + r")(s|(?<=[sxz])es|(?<=[cs]h)es)?(?![\w'-])", re.IGNORECASE)
 
 
 def _loanword(m):

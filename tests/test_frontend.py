@@ -208,6 +208,19 @@ class NormaliserV2Tests(unittest.TestCase):
             ("Os sites e os links.", "os saites e os linques."),
             ("Fiz o check-in.", "fiz o xequín."),
             ("Trabalho em home office.", "trabalho em rôme ófice."),
+            ("Vendi on-line o meu kit.", "vendi onlaine o meu quíte."),
+            ("O Kubernetes roda o Docker.", "o cubernétis roda o dóquer."),
+            ("O overfitting do dataset.", "o overfítin do dêitasséte."),
+            ("Os databases em Python.", "os dêitabeices em páiton."),
+            ("Comprei uma bike e uma air fryer.", "comprei uma báique e uma ér fráier."),
+        ])
+
+    def test_portuguese_plurals_are_not_loanwords(self):
+        self.check([
+            ("Os postes da rua.", "os postes da rua."),
+            ("Os chefes e os botes.", "os chefes e os botes."),
+            ("Tu deves pagar.", "tu deves pagar."),
+            ("Os coaches e os posts.", "os coutches e os pôstes."),
         ])
 
     def test_addresses(self):
