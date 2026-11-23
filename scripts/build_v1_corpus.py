@@ -96,6 +96,15 @@ def main():
                         continue
                     regen.append({"id": row["id"] + "r", "batch": 5, "split": path.stem, "text": fixed,
                                   "source": row["source"] + "+v1"})
+    # Append-only: clip ids are row positions, so rows already generated keep
+    # their place and sentences that newly qualify go at the end of their split.
+    existing = []
+    for split in ("train", "validation", "test"):
+        path = args.corpus / "batch5" / f"{split}.parquet"
+        if path.exists():
+            existing += pq.read_table(path).to_pylist()
+    known = {(r["split"], r["text"]) for r in existing}
+    regen = existing + [r for r in regen if (r["split"], r["text"]) not in known]
     counts = write_split_files(regen, args.corpus / "batch5", 5)
     (args.corpus / "v1_superseded.txt").write_text("\n".join(superseded) + "\n")
     print(json.dumps({"batch5": counts, "superseded": len(superseded)}))
