@@ -162,7 +162,8 @@ def main():
                 transcript = transcribe(path)
                 w = clip_wer(s["text"], transcript)
                 ok = (0.5 <= seconds <= 35.0) and (w < args.max_wer) and transcript
-                conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                conn.execute("INSERT OR REPLACE INTO clips (clip_id, voice, batch, split, text, seconds, sr, gen_seconds, rtf, "
+                             "wer, transcript, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                              (cid, voice, s["batch"], s["split"], s["text"],
                               round(seconds, 3), sr, round(gen / len(chunk), 2),
                               round(gen / len(chunk) / max(seconds, 1e-9), 3),
@@ -222,7 +223,8 @@ def main():
                 transcript = transcribe(path)
                 w = clip_wer(s["text"], transcript)
                 ok = (0.5 <= seconds <= 35.0) and (w < args.max_wer) and transcript
-                conn.execute("INSERT OR REPLACE INTO clips VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                conn.execute("INSERT OR REPLACE INTO clips (clip_id, voice, batch, split, text, seconds, sr, gen_seconds, rtf, "
+                             "wer, transcript, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                              (cid, voice, s["batch"], s["split"], s["text"],
                               round(seconds, 3), sr, round(gen / len(chunk), 2),
                               round(gen / len(chunk) / max(seconds, 1e-9), 3),

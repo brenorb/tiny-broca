@@ -194,7 +194,7 @@ class NormaliserV2Tests(unittest.TestCase):
             ("A NASA e a FIFA.", "a nasa e a fifa."),
             ("Dois PCs e três CDs.", "dois pê cês e três cê dês."),
             ("O IBGE.", "o i bê gê é."),
-            ("O Sr. Silva e a Dra. Ana, etc.", "o senhor silva e a doutora ana, etcétera"),
+            ("O Sr. Silva e a Dra. Ana, etc.", "o senhor silva e a doutora ana, etcétera."),
             ("Século XXI e Dom Pedro II", "século vinte e um e dom pedro segundo"),
             ("A II Guerra Mundial", "a segunda guerra mundial"),
             ("vc vai hj? blz", "você vai hoje? beleza"),

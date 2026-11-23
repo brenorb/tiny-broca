@@ -337,7 +337,7 @@ story	istóri
 stories	istóris
 live	láive
 game	gueime
-gamer	gueimer
+gamer	guêimer
 videogame	videogueime
 nerd	nérde
 geek	guíque
@@ -393,7 +393,8 @@ outlet	áutlete
 off	ófe
 fitness	fítines
 crossfit	crósfite
-personal trainer	pérsonal treiner
+personal trainer	pérsonal trêiner
+trainer	trêiner
 skincare	isquinquér
 look	lúque
 outfit	áutfite
@@ -413,7 +414,7 @@ ketchup	quétchupe
 drink	drinque
 self-service	sélfe sérvice
 pet shop	péte xópe
-petshop	peteshópe
+petshop	petexópe
 pet	péte
 playground	pleigráunde
 camping	câmpin
@@ -524,7 +525,7 @@ playoff	pleiófe
 round	ráunde
 cover	câver
 hit	rite
-single	singou
+single	síngou
 remix	rimíx
 playback	pleibéque
 cosplay	cosplêi
@@ -535,6 +536,44 @@ stalker	istólquer
 hater	rêiter
 k-pop	queipópe
 kpop	queipópe
+code	côude
+feed	fíde
+freezer	frízer
+cashback	quéxibéque
+call center	cól cênter
+webcam	uebicã
+drive	dráive
+smart	ismarte
+e-book	ibúque
+ebook	ibúque
+chip	xípe
+nugget	nâguete
+brunch	brãnche
+muffin	mâfin
+pancake	penqueique
+waffle	uófou
+donut	dônut
+cheesecake	xisqueique
+food truck	fúde trâque
+drive-thru	dráive tru
+petrobras	petrobrás
+eletrobras	eletrobrás
+detran	detrã
+procon	procôm
+enem	enêm
+selic	selíque
+samu	sâmu
+unicamp	unicâmpi
+unesp	unéspi
+fuvest	fuvéste
+sebrae	sebráe
+senac	senáque
+anatel	anatél
+aneel	aneél
+embratel	embratél
+bovespa	bovéspa
+infraero	infraéro
+covid	côvide
 """
 
 # Acronyms, matched case-sensitively in upper case (a lower-case "s" plural is
@@ -682,7 +721,10 @@ _ABBREVIATIONS = (
     (r"\bn[º°]\s?\.?|\bn\.\s?[º°]|\bnúm\.", "número "),
     (r"\btel\.", "telefone"),
     (r"\bcel\.", "celular"),
+    (r"\betc\b\.(?=\s*$|\s+[A-ZÀ-Ú])", "etcétera."),
     (r"\betc\b\.?", "etcétera"),
+    (r"\bséc\.", "século"),
+    (r"(?-i:\bD)\.(?=\s(?-i:[A-ZÀ-Ú]))", "dom"),
     (r"\bp\.\s?ex\.", "por exemplo"),
     (r"\bvs\.", "versus"),
     (r"\baprox\.", "aproximadamente"),
@@ -749,6 +791,8 @@ passagem passagens vantagem vantagens margem margens origem origens dor dores
 gente pele peles neve febre sede sedes torre torres ponte pontes morte mortes
 sorte arte artes face faces fé paz luz luzes voz vozes cruz cruzes vagem
 libra libras gema gemas bala balas unidade unidades cidade cidades semana semanas
+árvore árvores foto fotos moto motos questão questões região regiões razão razões semente sementes
+raiz raízes grade grades tribo tribos parede paredes rede redes neve fome noção
 """.split())
 _MASCULINE_A = frozenset("""
 dia dias problema problemas sistema sistemas tema temas programa programas mapa mapas
@@ -758,7 +802,8 @@ sofá sofás pijama pijamas cinema cinemas grama gramas quilograma quilogramas
 miligrama miligramas aroma aromas delta alfa beta gama pirata piratas guarda guardas
 atleta atletas motorista motoristas jornalista jornalistas artista artistas dentista
 dentistas policial policiais papa papas profeta profetas monarca monarcas diadema
-teorema teoremas trema emblema emblemas enigma enigmas paradigma paradigmas
+teorema teoremas trema emblema emblemas enigma enigmas paradigma paradigmas poema poemas
+telefonemas coração corações
 """.split())
 _FEMININE_ENDINGS = ("ção", "ções", "são", "sões", "dade", "dades", "gem", "gens", "ice", "ices",
                      "eza", "ezas", "ura", "uras", "ância", "âncias", "ência", "ências", "ise", "ises",
@@ -790,14 +835,16 @@ _ROMAN_CARDINAL_CONTEXT = frozenset(("século", "séculos", "capítulo", "capít
                                      "ato", "livro", "tomo", "fase", "título", "anexo", "nível",
                                      "classe", "seção", "bloco", "módulo", "temporada", "edição"))
 _ROMAN_ARTICLE_CONTEXT = frozenset(("artigo", "inciso", "parágrafo"))
-_REGNAL_NAMES = frozenset("""
+_QUEEN_NAMES = frozenset(("isabel", "elizabeth", "elisabete", "maria", "vitória", "catarina", "cristina", "leonor",
+                          "beatriz", "joana", "teresa", "carlota", "ana", "margarida"))
+_REGNAL_NAMES = _QUEEN_NAMES | frozenset("""
 pedro joão paulo bento pio leão luís luiz henrique carlos elizabeth elisabete isabel fernando
 felipe filipe afonso manuel manoel jorge eduardo guilherme napoleão ricardo gregório inocêncio
 clemente urbano alexandre constantino frederico francisco josé maria sisto nicolau bonifácio
 """.split())
 
 _MONEY = re.compile(r"(?<![\w$])([-−])?\s?(R\$|US\$|U\$|€|£|\$)\s?([-−])?(" + _NUMBER + r")(?:,(\d{1,2}))?(?![\d.,]\d)"
-                    r"(?:\s?(mil|milhão|milhao|milhões|milhoes|bilhão|bilhao|bilhões|bilhoes|tri|trilhão|trilhões)\b)?",
+                    r"(?:\s?(mil|milhão|milhao|milhões|milhoes|mi|bilhão|bilhao|bilhões|bilhoes|bi|tri|trilhão|trilhões)\b)?",
                     re.IGNORECASE)
 _CURRENCIES = {"r$": ("real", "reais", False), "us$": ("dólar", "dólares", False),
                "u$": ("dólar", "dólares", False), "$": ("dólar", "dólares", False),
@@ -812,15 +859,16 @@ _TIME_HMS = re.compile(r"\b(\d{1,2}):(\d{2}):(\d{2})\b")
 _TIME_HM = re.compile(r"\b(\d{1,2}):(\d{2})(?:\s?(?:h|hs|hrs)\b)?")
 _CLOCK = re.compile(r"\b(\d{1,2})\s?h\s?(\d{2})(?:\s?min)?\b", re.IGNORECASE)
 _HOURS = re.compile(r"\b(\d{1,2})\s?(?:h|hs|hrs|hr)(?![\w²³])", re.IGNORECASE)
-_ORDINAL_SIGN = re.compile(r"\b(\d{1,4})\s?\.?\s?([ºª])")
+_ORDINAL_SIGN = re.compile(r"\b(\d{1,3}(?:\.\d{3})+|\d{1,4})\s?\.?\s?([ºª])(s?)")
+_NUMBER_SIGN = re.compile(r"\b[nN]\s?\.?\s?[º°]\s?\.?\s?(?=\d)")
 _ORDINAL_ASCII = re.compile(r"\b(\d{1,3})(o|a|os|as)\b")
 _ORDINAL_DEGREE = re.compile(r"\b(\d{1,3})\s?°(?=\s+(?:lugar|andar|ano|anos|dia|turno|colocado|colocada|série|período|"
                              r"semestre|bimestre|trimestre|tempo|filho|filha|neto|aniversário|encontro|capítulo|"
                              r"volume|mandato|batalhão|distrito|grau|time|vez|edição|round|jogo|gol)\b)")
 _PERCENT = re.compile(r"(?<![\w,.])([-−])?(" + _NUMBER + r")(?:,(\d+))?\s?%")
 _DEGREES = re.compile(r"(?<![\w,.])([-−])?(" + _NUMBER + r")(?:,(\d+))?\s?°\s?([CF])?(?![\w])")
-_PHONE = re.compile(r"(?:\+\s?55\s?)?\(\s?(\d{2})\s?\)\s?(9\s?\d{4}|\d{4})[-\s.]?(\d{4})\b|"
-                    r"(?:\+\s?55\s?)?\b(\d{2})\s(9\d{4}|\d{4})-(\d{4})\b")
+_PHONE = re.compile(r"(\+\s?55\s?)?\(\s?(\d{2})\s?\)\s?(9\s?\d{4}|\d{4})[-\s.]?(\d{4})\b|"
+                    r"(\+\s?55\s?)?\b(\d{2})\s(9\d{4}|\d{4})-(\d{4})\b")
 _PHONE_LOCAL = re.compile(r"(?<![\d-])(9?\d{4})-(\d{4})(?![\d-])")
 _TOLL_FREE = re.compile(r"\b(0[38]00)[\s-]?(\d{3})[\s-]?(\d{4})\b")
 _COUNTRY_CODE = re.compile(r"(?<![\w])\+(\d{1,3})(?=\s?\(?\d)")
@@ -830,7 +878,7 @@ _GROUPS = re.compile(r"\b\d{1,3}(?:[.-]\d{1,3}){2,}\b")     # CPF, CNPJ-like, CE
 _PLATE = re.compile(r"\b([A-Z]{3})-?(\d)([A-Z0-9])(\d{2})\b")
 _SCORE = re.compile(r"(\b[" + _UPPER + r"][" + _LOWER + r"]+\s+)(\d{1,2})\s?[xX]\s?(\d{1,2})(?=\s+[" + _UPPER + r"])")
 _COEFFICIENT = re.compile(r"(?<![\w,.])(\d{1,3})([a-zA-Z])(?![\w])")
-_SPACED_SCORE = re.compile(r"(?<![\w,.])(\d{1,2})\s+[xX]\s+(\d{1,2})(?![\d,]|\s*(?:cm|mm|m|metros|km|pol|polegadas)\b)")
+_SPACED_SCORE = re.compile(r"(?<![\w,.])(\d{1,2})\s+[xX]\s+(\d{1,2})(?!\d|,\d|\s*(?:cm|mm|m|metros|km|pol|polegadas)\b)")
 _TIMES_X = re.compile(r"(?<![\w,.])(\d{1,3})\s?[xX](?![\w\d])(?!\s*\d)")
 _BY_X = re.compile(r"(?<![\w,.])(\d+)\s?[xX]\s?(\d+)(?!\d|[,.]\d)")
 _RANGE = re.compile(r"(?<![\d.,/:-])(\d{1,4})\s?[-—]\s?(\d{1,4})(?!\d|[.,/:-]\d)")
@@ -846,6 +894,12 @@ _FRACTIONS = {2: ("meio", "meios"), 3: ("terço", "terços"), 4: ("quarto", "qua
 _UNITS_TABLE = (
     # symbol, singular, plural, feminine
     ("km/h", "quilômetro por hora", "quilômetros por hora", False),
+    ("km/l", "quilômetro por litro", "quilômetros por litro", False),
+    ("cm²", "centímetro quadrado", "centímetros quadrados", False),
+    ("cm2", "centímetro quadrado", "centímetros quadrados", False),
+    ("Mbps", "megabit por segundo", "megabits por segundo", False),
+    ("Gbps", "gigabit por segundo", "gigabits por segundo", False),
+    ("kbps", "quilobit por segundo", "quilobits por segundo", False),
     ("m/s", "metro por segundo", "metros por segundo", False),
     ("km²", "quilômetro quadrado", "quilômetros quadrados", False),
     ("km2", "quilômetro quadrado", "quilômetros quadrados", False),
@@ -890,7 +944,20 @@ _UNITS_TABLE = (
 _UNIT_NAMES = {symbol: (singular, plural, feminine) for symbol, singular, plural, feminine in _UNITS_TABLE}
 _UNIT = re.compile(r"(?<![\w,.])([-−])?(" + _NUMBER + r")(?:,(\d+))?\s?(" +
                    "|".join(re.escape(u[0]) for u in _UNITS_TABLE) + r")(?![\w²³/])")
-_TECH_NUMBER = re.compile(r"\b(\d{1,2})([GDK])\b")      # 4G, 5G, 3D, 4K
+_TECH_NUMBER = re.compile(r"\b(\d{1,3})([A-KM-UX-Z])\b")   # 4G, 3D, 4K, seat 23C (not L, V, W: units)
+# Single capital letters standing alone (plano B, vitamina C, Raio X); vowels only after a naming word.
+_LONE_CONSONANT = re.compile(r"(?<![\w'.])([B-DF-HJ-NP-TV-Z])(?![\w'])")
+_LONE_VOWEL = re.compile(r"\b(plano|vitamina|letra|classe|tipo|grupo|nota|série|opção|item|bloco|setor|ala|portão|"
+                         r"fila|turma|seção|categoria|modelo|versão|lado|prédio|torre|sala)\s+([AEIOU])(?![\w'])",
+                         re.IGNORECASE)
+_LETTER_HYPHEN_DIGIT = re.compile(r"(?<=[A-Za-zÀ-ú])-(?=\d)")
+_LONE_HASH = re.compile(r"(?<!\S)#(?!\S)")
+_PER = re.compile(r"\s?/\s?(mês|dia|hora|semana|ano|noite|pessoa|unidade|litro|quilo|kg|aula|mensal)\b")
+_KM_MARKER = re.compile(r"(?<![\w\d])km\.?\s+(?=\d)", re.IGNORECASE)
+_CONTEXT_SCORE = re.compile(r"\b(venceu|perdeu|ganhou|empatou|terminou|ficou|placar|por|foi)\s+(\d{1,2})\s?[xX]\s?(\d{1,2})\b"
+                            r"(?!\s*(?:cm|mm|m|km|pol|metros?|centímetros?)\b)", re.IGNORECASE)
+_DIMENSION = re.compile(r"(?<![\w,.])(\d+(?:,\d+)?)\s?[xX×]\s?(\d+(?:,\d+)?)(?:\s?[xX×]\s?(\d+(?:,\d+)?))?"
+                        r"(?:\s?(cm|mm|m|km|pol)(?![\w²³/])|(?=\s+(?:metros?|centímetros?|milímetros?|quilômetros?|polegadas?)\b))")
 
 _EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
 _URL = re.compile(r"\b(?:https?://)?(?:www\.)?[\w-]+(?:\.[\w-]+)*\.(?:com|br|org|net|gov|edu|io|app|dev|info|me|tv|co|ai)"
@@ -914,7 +981,8 @@ _MATH = (
     ("−", " menos "), ("&", " e "), ("§", " parágrafo "), ("@", " arroba "),
 )
 _OPERATOR_CHARS = "<>=+×÷^≥≤≠±−"
-_VARIABLE = re.compile(r"(?<![\w'])([a-zA-Z])(?=\s*[" + re.escape(_OPERATOR_CHARS) + r"])|"
+_OPERAND = r"(?:\d|[a-zA-Z](?![\w']))"
+_VARIABLE = re.compile(r"(?<![\w'])([a-zA-Z])(?=\s*[!" + re.escape(_OPERATOR_CHARS) + r"]+\s*" + _OPERAND + r")|"
                        r"(?<=[" + re.escape(_OPERATOR_CHARS) + r"])(\s*)([a-zA-Z])(?![\w'])")
 _SPACED_MINUS = re.compile(r"(?<=[\d\w])\s+-\s+(?=[\d\w])")
 _SPACED_TIMES = re.compile(r"(?<=\d)\s+[xX]\s+(?=\d)")
@@ -927,19 +995,37 @@ _SPACE_BEFORE_PUNCT = re.compile(r"\s+([,.?!;:…)])")
 _REPEATED_PUNCT = re.compile(r"([?!])[?!]+|([,;:])[,;:]+")
 
 
+# Words after which a number is a code read digit by digit.
+_IDENTIFIER_CONTEXT = frozenset(("protocolo", "senha", "código", "pin", "ramal", "matrícula", "final", "agência",
+                                 "conta", "token", "chassi", "renavam", "lote"))
 _NOT_NOUNS = frozenset(("a", "o", "as", "os", "e", "ou", "de", "do", "da", "dos", "das", "em", "no", "na",
                         "por", "para", "pra", "com", "que", "se", "à", "às", "ao", "aos", "até", "mais", "menos",
                         "cada", "nada", "agora", "ainda", "fora", "embora", "quase", "apenas", "só", "já", "lá",
                         "cá", "ali", "aqui"))
 
 
+_NEUTRAL_ADJECTIVES = frozenset(("grande", "grandes", "maior", "maiores", "melhor", "melhores", "pior", "piores",
+                                 "enorme", "enormes", "simples", "jovem", "jovens", "principal", "principais",
+                                 "importante", "importantes", "diferente", "diferentes", "excelente", "excelentes",
+                                 "incrível", "incríveis", "breve", "breves", "leve", "leves", "forte", "fortes",
+                                 "interessante", "interessantes", "feliz", "felizes", "verde", "verdes"))
+
+
 def _next_word(text, end):
-    """The noun a number counts: the next word, looking past "de" and past
-    the second number of a span ("de 231 a 1037 cidades")."""
-    m = re.match(r"\s+(?:(?:a|e|ou|até)\s+[\d.,]+\s+)?(?:de\s+)?([^\W\d_]+)", text[end:])
-    if not m or m.group(1).lower() in _NOT_NOUNS:
+    """The noun a number counts: the next word, looking past "de", "mil",
+    the second number of a span ("de 231 a 1037 cidades"), a partitive
+    ("2 em cada 10 brasileiras") and a gender-neutral adjective ("22 grandes
+    cidades")."""
+    m = re.match(r"\s+(?:(?:a|e|ou|até)\s+[\d.,]+\s+)?(?:em\s+cada\s+[\d.,]+\s+)?(?:mil\s+)?(?:de\s+)?"
+                 r"([^\W\d_]+)(?:\s+([^\W\d_]+))?", text[end:])
+    if not m:
         return ""
-    return m.group(1)
+    word = m.group(1)
+    if word.lower() in _NEUTRAL_ADJECTIVES and m.group(2):
+        word = m.group(2)
+    if word.lower() in _NOT_NOUNS:
+        return ""
+    return word
 
 
 def _previous_word(text, start):
@@ -947,11 +1033,11 @@ def _previous_word(text, start):
     return m.group(1).lower() if m else ""
 
 
-def _count_words(n, feminine, next_word):
+def _count_words(n, feminine, next_word, has_de=False):
     """A cardinal before a noun: gender agreement, and "de" after exact
-    millions ("um milhão de pessoas")."""
+    millions ("um milhão de pessoas") unless the text already has it."""
     words = number_words(n, feminine)
-    if words.split(" ")[-1] in _SCALE_WORDS and next_word and next_word.lower() not in ("de", "e"):
+    if words.split(" ")[-1] in _SCALE_WORDS and next_word and next_word.lower() not in ("de", "e") and not has_de:
         words += " de"
     return words
 
@@ -968,8 +1054,9 @@ def _money(m):
             amount = value * 1000 + (int((cents + "00")[:3]) if cents else 0)
             words = number_words(amount, feminine) + " " + plural
         else:
-            if scale == "tri":
-                scale = "trilhão" if value == 1 and not cents else "trilhões"
+            one = value == 1 and not cents
+            scale = {"tri": "trilhão" if one else "trilhões", "bi": "bilhão" if one else "bilhões",
+                     "mi": "milhão" if one else "milhões"}.get(scale, scale)
             head = decimal_words(integer, cents) if cents else number_words(value)
             words = f"{head} {scale} de {plural}"
     else:
@@ -1001,7 +1088,9 @@ def _date_full(m):
     day, month, year = int(m.group(1)), int(m.group(2)), m.group(3)
     if not (1 <= month <= 12 and 1 <= day <= 31):
         return m.group(0)
-    return " " + _date_words(day, month, int("20" + year if len(year) == 2 else year)) + " "
+    if len(year) == 2:
+        year = ("20" if int(year) <= 40 else "19") + year
+    return " " + _date_words(day, month, int(year)) + " "
 
 
 def _date_iso(m):
@@ -1025,14 +1114,26 @@ def _fraction_words(numerator, denominator, next_word=""):
     return f"{number_words(numerator)} {singular if numerator == 1 else plural}"
 
 
+_MEASURE_NOUNS = frozenset("""xícara xícaras copo copos colher colheres litro litros quilo quilos kg g grama gramas
+hora horas dúzia dúzias pizza pizzas parte partes página páginas tablete tabletes lata latas pacote pacotes
+""".split())
+
+
 def _partial_date(text):
     def replace(m):
         a, b = m.group(1), m.group(2)
         day, month = int(a), int(b)
         before = _previous_word(text, m.start())
+        after = text[m.end():]
+        if (day, month) == (24, 7):
+            return " vinte e quatro por sete "
+        word = re.match(r"\s+([^\W\d_]+)", after)
+        word = word.group(1).lower() if word else ""
         is_date = 1 <= month <= 12 and 1 <= day <= 31
-        fraction_like = (day < month and month in _FRACTIONS and not a.startswith("0") and not b.startswith("0")
-                         and before not in _DATE_CONTEXT)
+        span = re.match(r"\s+(?:a|até|e|ao)\s+\d{1,2}/\d{1,2}", after)
+        fraction_like = (month in (2, 3, 4, 8) and day < month and not a.startswith("0") and not b.startswith("0")
+                         and before not in _DATE_CONTEXT and not span
+                         and (word in ("de", "da", "do", "dos", "das") or word in _MEASURE_NOUNS or not is_date))
         if fraction_like or not is_date:
             if month in _FRACTIONS and day < month:
                 return " " + _fraction_words(day, month, _next_word(text, m.end())) + " "
@@ -1041,9 +1142,14 @@ def _partial_date(text):
     return _DATE_PARTIAL.sub(replace, text)
 
 
-def _clock_words(hour, minute, hours_word):
+def _clock_words(hour, minute, hours_word, duration=False):
     if not 0 <= hour <= 24 or not 0 <= minute <= 59:
         return None
+    if duration:
+        head = number_words(hour, feminine=True) + (" hora" if hour == 1 else " horas")
+        if minute == 0:
+            return head
+        return head + (" e meia" if minute == 30 else f" e {number_words(minute)}")
     if hour in (0, 24):
         head = "meia noite"
     elif hour == 12:
@@ -1060,22 +1166,47 @@ def _clock_words(hour, minute, hours_word):
     return f"{head} e {number_words(minute)}"
 
 
+def _unit_count(n, singular, plural, feminine=False):
+    return f"{number_words(n, feminine)} {singular if n == 1 else plural}"
+
+
 def _time_hms(m):
-    words = _clock_words(int(m.group(1)), int(m.group(2)), True)
-    seconds = int(m.group(3))
-    if words is None or seconds > 59:
+    hours, minutes, seconds = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    if hours > 24 or minutes > 59 or seconds > 59:
         return m.group(0)
-    return f" {words} e {number_words(seconds)} segundo{'' if seconds == 1 else 's'} "
+    return (f" {_unit_count(hours, 'hora', 'horas', True)}, {_unit_count(minutes, 'minuto', 'minutos')} e "
+            f"{_unit_count(seconds, 'segundo', 'segundos')} ")
 
 
 def _time_hm(m):
-    words = _clock_words(int(m.group(1)), int(m.group(2)), True)
+    first, second = int(m.group(1)), int(m.group(2))
+    if first > 24 and second <= 59:
+        # A duration in minutes and seconds ("corri em 25:30").
+        return f" {_unit_count(first, 'minuto', 'minutos')} e {_unit_count(second, 'segundo', 'segundos')} "
+    words = _clock_words(first, second, True)
     return m.group(0) if words is None else " " + words + " "
 
 
-def _clock(m):
-    words = _clock_words(int(m.group(1)), int(m.group(2)), False)
-    return m.group(0) if words is None else " " + words + " "
+# Words before "1h30" that make it a duration ("tem 1h30", "em 2h15"); otherwise it is a time of day.
+_DURATION_CONTEXT = frozenset(("em", "durante", "por", "dura", "durou", "duram", "leva", "levou", "levam", "tem",
+                               "teve", "têm", "há", "faz", "fez", "após", "mais", "menos", "quase", "cerca", "só",
+                               "apenas", "uns", "umas", "total"))
+
+
+def _clocks(text):
+    def replace(m):
+        before = _previous_word(text, m.start())
+        duration = before in _DURATION_CONTEXT or bool(re.match(r"\s+de\s+(?!manhã|tarde|noite|madrugada)", text[m.end():]))
+        words = _clock_words(int(m.group(1)), int(m.group(2)), False, duration=duration)
+        return m.group(0) if words is None else " " + words + " "
+    return _CLOCK.sub(replace, text)
+
+
+_NAMED_HOURS = ((r"\b(?:(À)|à)s(\s+)(meio dia)", lambda m: ("Ao" if m.group(1) else "ao") + m.group(2) + m.group(3)),
+                (r"\b([Àà])s(\s+)(meia noite)", r"\1\2\3"),
+                (r"\b([Aa])s(\s+)(meio dia)", r"o\2\3"), (r"\b([Aa])s(\s+)(meia noite)", r"\1\2\3"),
+                (r"\b([Dd])as(\s+)(meio dia)", r"\1o\2\3"), (r"\b([Dd])as(\s+)(meia noite)", r"\1a\2\3"),
+                (r"\b([Pp]el)as(\s+)(meio dia)", r"\1o\2\3"), (r"\b([Pp]el)as(\s+)(meia noite)", r"\1a\2\3"))
 
 
 def _hours(m):
@@ -1086,7 +1217,10 @@ def _hours(m):
 
 
 def _ordinal_sign(m):
-    return " " + ordinal_words(int(m.group(1)), feminine=m.group(2) == "ª") + " "
+    words = ordinal_words(int(m.group(1).replace(".", "")), feminine=m.group(2) == "ª")
+    if m.group(3):
+        words = " ".join(w + "s" if w[:-1] + "o" in _ORDINAL_WORDS or w in _ORDINAL_WORDS else w for w in words.split(" "))
+    return " " + words + " "
 
 
 def _ordinal_ascii(m):
@@ -1126,9 +1260,11 @@ def _spell_digits_groups(*groups):
 
 
 def _phone(m):
-    groups = [g for g in m.groups() if g]
+    country = m.group(1) or m.group(5)
+    groups = [g for g in (m.groups()[1:4] if m.group(2) else m.groups()[5:8]) if g]
     area, rest = groups[0], [g.replace(" ", "") for g in groups[1:]]
-    return " " + number_words(int(area)) + ", " + _spell_digits_groups(*rest) + " "
+    prefix = "mais cinquenta e cinco, " if country else ""
+    return " " + prefix + number_words(int(area)) + ", " + _spell_digits_groups(*rest) + " "
 
 
 def _phone_local(m):
@@ -1173,13 +1309,15 @@ def _roman(text):
         before = re.search(r"([^\W\d_]+)\.?\s+$", before_text)
         before = before.group(1) if before else ""
         after = re.match(r"\s+([" + _UPPER + r"][^\W\d_]*)", text[m.end():])
-        if before.lower() in _ROMAN_CARDINAL_CONTEXT or before.lower() in ("cap", "vol", "sec"):
+        if (before.lower() in _ROMAN_CARDINAL_CONTEXT or before.lower() in ("cap", "vol", "sec", "séc")
+                or re.match(r"\s+de\s+(?:" + "|".join(_MONTHS) + r")\b", text[m.end():], re.IGNORECASE)):
             return number_words(value)
         if before.lower() in _ROMAN_ARTICLE_CONTEXT or before.lower() == "art":
             return ordinal_words(value) if value < 10 else number_words(value)
         if before.lower() in _REGNAL_NAMES and before[:1].isupper() and value <= 30:
-            return ordinal_words(value) if value <= 10 else number_words(value)
-        if after and (len(numeral) > 1 or before == "") and value <= 100:
+            return ordinal_words(value, feminine=before.lower() in _QUEEN_NAMES) if value <= 10 else number_words(value)
+        if after and (len(numeral) > 1 or before.lower() in ("", "a", "o", "na", "no", "da", "do", "pela", "pelo", "à", "ao")) \
+                and value <= 100:
             return ordinal_words(value, feminine=_is_feminine(after.group(1)))
         return numeral
     return _ROMAN.sub(replace, text)
@@ -1228,7 +1366,7 @@ def _acronym_reading(token):
     return _spell_letters(core) + suffix
 
 
-_ACRONYM = re.compile(r"(?<![\w'])([A-Z][A-Z0-9]{1,6}s?)(?![\w'])")
+_ACRONYM = re.compile(r"(?<![\w'])([A-Z][A-Z0-9]{1,9}s?)(?![\w'])")
 
 
 def _acronyms(text):
@@ -1240,6 +1378,8 @@ def _acronyms(text):
     def replace(m):
         token = m.group(1)
         if token.isdigit() or (token[0].isupper() and token[1:].islower()):
+            return token
+        if token in _UNIT_NAMES and re.search(r"\d\s?$", text[:m.start()]):
             return token
         if not any(c.isupper() for c in token[1:]) and not token[1:].isdigit():
             return token
@@ -1280,12 +1420,15 @@ def _email(m):
 
 
 def _url(m):
-    address = re.sub(r"^https?://", "", m.group(0), flags=re.IGNORECASE).rstrip("/")
-    return " " + _speak_address(address, _URL_SEPARATORS) + " "
+    address = re.sub(r"^https?://", "", m.group(0), flags=re.IGNORECASE)
+    tail = ""
+    while address and address[-1] in ".,;:!?":
+        tail, address = address[-1] + tail, address[:-1]
+    return " " + _speak_address(address.rstrip("/"), _URL_SEPARATORS) + " " + tail
 
 
 _LOANWORD_KEYS = sorted(LOANWORDS, key=len, reverse=True)
-_LOANWORD = re.compile(r"(?<![\w'-])(" + "|".join(re.escape(k) for k in _LOANWORD_KEYS) + r")(s?)(?![\w'-])",
+_LOANWORD = re.compile(r"(?<![\w'-])(" + "|".join(re.escape(k) for k in _LOANWORD_KEYS) + r")(es|s)?(?![\w'-])",
                        re.IGNORECASE)
 
 
@@ -1296,19 +1439,45 @@ def _loanword(m):
     return respelled
 
 
+def _dimension(m):
+    sides = [decimal_words(*v.split(",")) if "," in v else number_words(int(v)) for v in m.groups()[:3] if v]
+    unit = m.group(4)
+    words = " por ".join(sides)
+    return f" {words} {_UNIT_NAMES[unit][1]} " if unit else f" {words} "
+
+
+_SLANG_RE = re.compile(r"(?<![\w'])(" + "|".join(map(re.escape, sorted(_SLANG, key=len, reverse=True))) + r")(?![\w'])",
+                       re.IGNORECASE)
+
+
+def _slang(m):
+    token = m.group(1)
+    if token in ACRONYMS or (len(token) == 1 and not token.islower()):
+        return token
+    if token.islower() or (token[0].isupper() and token[1:].islower()) or token.lower() in ("vc", "vcs"):
+        reading = _SLANG[token.lower()]
+        return reading[0].upper() + reading[1:] if token[0].isupper() else reading
+    return token
+
+
 def _integers(text):
     def replace(m):
         digits = m.group(1)
         plain = digits.replace(".", "")
-        if len(plain) > 15 or (len(plain) > 1 and plain.startswith("0")):
+        before = _previous_word(text, m.start())
+        if (len(plain) > 15 or (len(plain) > 1 and plain.startswith("0")) or (len(plain) >= 10 and "." not in digits)
+                or before in _IDENTIFIER_CONTEXT):
             return " " + digits_words(plain) + " "
         value = int(plain)
         next_word = _next_word(text, m.end())
-        before = _previous_word(text, m.start())
-        feminine = before in ("à", "às") or bool(next_word) and _is_feminine(next_word)
+        following = text[m.end():]
+        time_of_day = bool(re.match(r"\s+(?:e\s+meia\s+)?da\s+(?:manhã|tarde|noite|madrugada)\b", following))
+        feminine = (before in ("à", "às", "das", "pelas") or time_of_day
+                    or (before in ("as", "são") and not next_word)
+                    or (bool(next_word) and _is_feminine(next_word)))
         if before == "dia" and value == 1:
             return " primeiro "
-        return " " + _count_words(value, feminine, next_word) + " "
+        return " " + _count_words(value, feminine, next_word, bool(re.match(r"\s+de\b", following))) + " "
     return _INTEGER.sub(replace, text)
 
 
@@ -1325,7 +1494,13 @@ def _math(text):
         text = _SPACED_TIMES.sub(" \u2297 ", text)
         text = _SPACED_MINUS.sub(" menos ", text)
         text = _SLASH_DIVIDE.sub(" dividido por ", text)
-    text = _VARIABLE.sub(lambda m: (" " + _LETTER_NAMES[(m.group(1) or m.group(3)).lower()] + " "), text)
+    def variable(m):
+        letter = m.group(1) or m.group(3)
+        # "a", "o" and "e" before a word are an article or a conjunction ("> o preço").
+        if m.group(3) and letter in "aoeAOE" and re.match(r"\s+[^\W\d_]{2,}", text[m.end():]):
+            return m.group(0)
+        return " " + _LETTER_NAMES[letter.lower()] + " "
+    text = _VARIABLE.sub(variable, text)
     for symbol, words in _MATH:
         text = text.replace(symbol, words)
     return text
@@ -1363,15 +1538,18 @@ def spoken_form(text):
     """
     if not isinstance(text, str):
         raise TypeError("text must be a string")
-    # Ordinal indicators and the number sign before NFKC folds them into o/a.
-    text = _ORDINAL_SIGN.sub(lambda m: m.group(0) if re.match(r"[nN]", text[max(0, m.start() - 1):m.start()])
-                             else _ordinal_sign(m), text)
+    # The number sign and ordinal indicators before NFKC folds º and ª into o and a.
+    text = _NUMBER_SIGN.sub(" número ", text)
+    text = _ORDINAL_SIGN.sub(_ordinal_sign, text)
     text = unicodedata.normalize("NFKC", text).translate(_QUOTE_TRANSLATION)
     text = text.replace("⁄", "/").replace("​", "").replace("️", "").replace("‍", "")
     text = text.replace("ª", " a").replace("º", " o")
     # Two hyphens and three dots are the ASCII forms of the inventory symbols;
     # without this "..." would become three pause tokens.
     text = text.replace("--", "—").replace("...", "…")
+    text = _PLATE.sub(_plate, text)
+    text = _LETTER_HYPHEN_DIGIT.sub(" ", text)
+    text = _LONE_HASH.sub(" cerquilha ", text)
     text = _EMAIL.sub(_email, text)
     text = _URL.sub(_url, text)
     text = _HANDLE.sub(lambda m: " arroba " + m.group(1) + " ", text)
@@ -1382,7 +1560,6 @@ def spoken_form(text):
                       text, flags=re.IGNORECASE)
     text = _LAUGH_K.sub(" cacacá ", text)
     text = _LAUGH_HA.sub(" rárárá ", text)
-    text = _PLATE.sub(_plate, text)
     text = _roman(text)
     text = _TECH_NUMBER.sub(lambda m: f" {number_words(int(m.group(1)))} {_LETTER_NAMES[m.group(2).lower()]} ", text)
     text = _MONEY.sub(_money, text)
@@ -1394,13 +1571,18 @@ def spoken_form(text):
     text = _DATE_MONTH_YEAR.sub(_month_year, text)
     text = _TIME_HMS.sub(_time_hms, text)
     text = _TIME_HM.sub(_time_hm, text)
-    text = _CLOCK.sub(_clock, text)
+    text = _clocks(text)
     text = _HOURS.sub(_hours, text)
+    for pattern, replacement in _NAMED_HOURS:
+        text = re.sub(pattern, replacement, text)
     text = _ORDINAL_DEGREE.sub(lambda m: " " + ordinal_words(int(m.group(1))) + " ", text)
     text = _ORDINAL_ASCII.sub(_ordinal_ascii, text)
     text = _PERCENT.sub(_percent, text)
     text = _DEGREES.sub(_degrees, text)
+    text = _DIMENSION.sub(_dimension, text)
     text = _UNIT.sub(_unit, text)
+    text = _PER.sub(lambda m: " por " + {"kg": "quilo", "mensal": "mês"}.get(m.group(1), m.group(1)), text)
+    text = _KM_MARKER.sub(" quilômetro ", text)
     text = _TOLL_FREE.sub(lambda m: " " + _spell_digits_groups(*m.groups()) + " ", text)
     text = _PHONE.sub(_phone, text)
     text = _CEP.sub(lambda m: " " + _spell_digits_groups(m.group(1), m.group(2)) + " ", text)
@@ -1409,7 +1591,8 @@ def spoken_form(text):
     text = _PHONE_LOCAL.sub(_phone_local, text)
     text = _COUNTRY_CODE.sub(lambda m: " mais " + number_words(int(m.group(1))) + " ", text)
     text = _SCORE.sub(lambda m: f"{m.group(1)}{number_words(int(m.group(2)))} a {number_words(int(m.group(3)))}", text)
-    if "=" in text:
+    text = _CONTEXT_SCORE.sub(lambda m: f"{m.group(1)} {number_words(int(m.group(2)))} a {number_words(int(m.group(3)))}", text)
+    if "=" in text or any(op in text for op in ("<", ">", "≥", "≤", "≠")):
         text = _COEFFICIENT.sub(lambda m: f" {number_words(int(m.group(1)))} {_LETTER_NAMES[m.group(2).lower()]} ", text)
     else:
         text = _SPACED_SCORE.sub(lambda m: f" {number_words(int(m.group(1)))} a {number_words(int(m.group(2)))} ", text)
@@ -1426,16 +1609,16 @@ def spoken_form(text):
     text = _integers(text)
     text = text.replace("\u2297", " vezes ")
     text = _LOANWORD.sub(_loanword, text)
-    text = re.sub(r"(?<![\w'])(" + "|".join(map(re.escape, sorted(_SLANG, key=len, reverse=True))) + r")(?![\w'])",
-                  lambda m: _SLANG[m.group(1).lower()] if m.group(1).islower() or m.group(1).lower() in ("vc", "vcs")
-                  else m.group(1), text)
+    text = _SLANG_RE.sub(_slang, text)
+    text = _LONE_VOWEL.sub(lambda m: m.group(1) + " " + _LETTER_NAMES[m.group(2).lower()], text)
+    text = _LONE_CONSONANT.sub(lambda m: " " + _LETTER_NAMES[m.group(1).lower()] + " ", text)
     text = _CONSONANTS_ONLY.sub(lambda m: " " + _spell_letters(m.group(0)) + " ", text)
     text = _cleanup(text)
     text = _REPEATED_PUNCT.sub(lambda m: m.group(1) or m.group(2), text)
     text = re.sub(r"\s+", " ", text)
     text = _SPACE_BEFORE_PUNCT.sub(r"\1", text)
-    text = re.sub(r"\(\s+", "(", text)
-    return text.strip()
+    text = re.sub(r"\(\s+", "(", text).strip()
+    return text[:1].upper() + text[1:]
 
 
 def normalize_text(text):
@@ -1538,6 +1721,8 @@ def _falling_diphthong(word, kinds, j):
     rest = word[j + 1:]
     if rest[:2] == "nh":
         return False
+    if rest[:2] in ("rr", "ss"):
+        return True
     if rest[:1] in _HIATUS_CODA and (len(rest) == 1 or kinds[j + 2] == "C"):
         return False
     return True
