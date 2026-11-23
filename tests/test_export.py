@@ -32,9 +32,11 @@ class ExportTest(unittest.TestCase):
     def test_rewrite_matches_synthesize(self):
         model = small_model()
         tokens, stress = utterance()
-        for voice in (0, 1):
+        for voice, switched in ((0, False), (1, False), (0, True), (1, True)):
+            # switched: noise instead of pulses in unvoiced frames (v1 checkpoints)
+            model.unvoiced_noise = switched
             reference, lengths, details = model.synthesize(tokens, stress, torch.tensor([tokens.shape[1]]), torch.tensor([voice]),
-                                                           speed=1.25, pitch_shift=0.1, pitch_range=1.3)
+                                                           speed=1.25, pitch_shift=0.1, pitch_range=1.3, unvoiced_noise=switched)
             noise = torch.randn(int(lengths[0]), generator=torch.Generator().manual_seed(0))[None]
             one = lambda value: torch.tensor([value])
             with torch.no_grad():
