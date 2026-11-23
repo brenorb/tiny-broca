@@ -23,6 +23,8 @@ from tiny_broca.text import spoken_normalize
 def transcribe(path):
     result = subprocess.run(["fscript", str(path), "--model", "parakeet-v3-int8", "--text=plain", "-D", "--raw", "--stdout"],
                             capture_output=True, text=True)
+    if result.returncode:  # an empty transcript would reject the clip for good
+        raise RuntimeError(f"fscript failed on {path}: {(result.stderr or result.stdout).strip()[:300]}")
     return result.stdout.strip()
 
 
