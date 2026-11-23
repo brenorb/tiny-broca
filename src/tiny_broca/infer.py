@@ -18,6 +18,8 @@ def load_model(path, device="cpu", check_frontend=True):
         raise ValueError("checkpoint was trained with a different phoneme inventory/front end")
     model = TinyBroca(Config.from_dict(state["config"]))
     model.load_state_dict(state["model"], strict=True)
+    # Synthesis settings the checkpoint was trained with (absent before v1).
+    model.unvoiced_noise = bool(state.get("synthesis", {}).get("unvoiced_noise", False))
     return model.to(device).eval()
 
 
@@ -44,7 +46,8 @@ def speak(model, text, voice, speed=1.0, pitch_shift=0.0, seed=0, pitch_range=1.
     tokens = torch.tensor([phones.ids], device=device)
     stress = torch.tensor([phones.stress], device=device)
     speaker = torch.tensor([model.config.speakers.index(voice)], device=device)
-    audio, lengths, details = model.synthesize(tokens, stress, torch.tensor([len(phones)], device=device), speaker, speed, pitch_shift, seed, pitch_range)
+    audio, lengths, details = model.synthesize(tokens, stress, torch.tensor([len(phones)], device=device), speaker, speed, pitch_shift, seed,
+                                               pitch_range, unvoiced_noise=getattr(model, "unvoiced_noise", False))
     if not torch.isfinite(audio).all():
         raise RuntimeError("model produced non-finite audio")
     return audio[0, :int(lengths[0])].cpu(), phones, details

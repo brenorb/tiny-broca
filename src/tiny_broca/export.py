@@ -133,7 +133,7 @@ class Exportable(nn.Module):
         wave = core + (harmonics - whole) * torch.cos((whole + 1) * theta)
         return wave * torch.sqrt(2.0 / harmonics)
 
-    def _vocoder(self, hidden, f0, total, noise):
+    def _vocoder(self, hidden, f0, total, noise, voiced=None):
         c = self.model.config
         v = self.model.vocoder
         last = total - 1
@@ -162,6 +162,11 @@ class Exportable(nn.Module):
             noise = torch.randn_like(pulses)
         else:
             noise = noise.index_select(1, torch.arange(c.hop * total, device=hidden.device))
+        if voiced is not None:
+            # Noise instead of pulses in unvoiced frames (SourceFilter's voicing switch).
+            knots = torch.cat((voiced, voiced[:, -1:]), dim=1)
+            v = (knots[:, :-1, None] * (1 - self.ramp) + knots[:, 1:, None] * self.ramp).reshape(1, -1)
+            pulses = v * pulses + (1 - v) * noise
         return (self._filter(pulses, harmonic_real, harmonic_imaginary, "synth", c.synth_fft, c.synth_hop)
                 + self._filter(noise, noise_real, noise_imaginary, "noise", c.noise_fft, c.noise_hop))
 
@@ -198,7 +203,8 @@ class Exportable(nn.Module):
         condition = torch.stack((pitch.clamp(-2.0, 1.5), voiced, prosody[..., 2].clamp(-4.5, 3.0)), dim=-1)
         acoustic = m.acoustic_stack(prosody_hidden + m.prosody_projection(condition), frame_mask)
         f0 = (c.pitch_reference_hz * torch.exp(pitch + pitch_shift)).clamp(c.f0_min, c.f0_max)
-        return self._vocoder(acoustic, f0, total, noise), durations
+        switch = voiced if getattr(m, "unvoiced_noise", False) else None
+        return self._vocoder(acoustic, f0, total, noise, switch), durations
 
 
 def example_inputs(length=24):

@@ -40,6 +40,7 @@ class TrainingSystem(nn.Module):
         self.model = TinyBroca(config)
         self.mel_head = nn.Linear(config.channels, config.n_mels)   # auxiliary, not exported
         self.spectral = SpectralLoss(config.sample_rate)
+        self.switched_excitation = False      # noise instead of pulses in unvoiced frames
 
     def objective(self, batch, teacher_probability, weights=WEIGHTS, random_phase=True):
         """Loss on full utterances. Returns ``(loss, terms, auxiliary)``.
@@ -82,7 +83,8 @@ class TrainingSystem(nn.Module):
         mel_target = (batch["mel"] - c.mel_mean) / c.mel_scale
         mel_head = masked_mean((self.mel_head(acoustic).float() - mel_target).abs().mean(-1), frame_mask)
         phase = 2 * math.pi * torch.rand(len(lengths), device=lengths.device) if random_phase else None
-        wave = m.vocoder(acoustic, m.frequency(target[..., 0]), lengths, phase=phase)
+        switch = target[..., 1].clamp(0, 1) if self.switched_excitation else None
+        wave = m.vocoder(acoustic, m.frequency(target[..., 0]), lengths, phase=phase, voicing=switch)
         stft, mel = self.spectral(wave, batch["wave"], lengths * c.hop)
         terms = dict(duration=duration, pause=pause, pitch=pitch, pitch_spread=pitch_spread, voicing=voicing, energy=energy,
                      mel_head=mel_head, stft=stft, mel=mel)
@@ -177,10 +179,10 @@ def atomic_save(value, path):
     os.replace(temporary, path)
 
 
-def export_model(model, path, step, annotation=None):
+def export_model(model, path, step, annotation=None, synthesis=None):
     atomic_save({"format_version": CHECKPOINT_FORMAT, "config": model.config.to_dict(), "step": step,
                  "frontend": {**frontend_identity(), "fingerprint": frontend_fingerprint()}, "annotation": annotation,
-                 "model": {k: v.detach().cpu() for k, v in model.state_dict().items()}}, path)
+                 "synthesis": synthesis or {}, "model": {k: v.detach().cpu() for k, v in model.state_dict().items()}}, path)
 
 
 def load_compatible(module, state):
@@ -307,6 +309,8 @@ def main():
     parser.add_argument("--stop-file", type=Path, help="Save and exit after a step when this file appears")
     parser.add_argument("--recorded-voicing", action="store_true", help="Use the pitch tracker's voicing as it is, "
                         "without marking vowel frames voiced")
+    parser.add_argument("--switched-excitation", action="store_true", help="Excite the harmonic branch with noise instead "
+                        "of pulses in unvoiced frames (recorded voicing in training, predicted at inference)")
     parser.add_argument("--no-preload", action="store_true", help="Load feature files lazily instead of before the first step")
     args = parser.parse_args()
     if min(args.steps, args.batch_frames, args.max_batch, args.save_every, args.keep_every, args.log_every, args.crops, args.gan_ramp) < 1:
@@ -362,6 +366,9 @@ def main():
                                                    "crop_samples", "crops", "teacher_hold", "teacher_ramp", "teacher_final",
                                                    "subset", "validation_size", "seed")}
     recipe["voiced_vowel_targets"] = not args.recorded_voicing
+    if args.switched_excitation:
+        recipe["switched_excitation"] = True
+    system.switched_excitation = args.switched_excitation
     recipe["weights"] = {**WEIGHTS, **{key: float(value) for key, value in args.weights.items()}}
     recipe["branched_from"] = None
     step = 0
@@ -453,7 +460,8 @@ def main():
                 record.update(validate(system, validation, validation_indices, args.device, recipe["weights"]))
                 state = snapshot()
                 atomic_save(state, args.output / "last.pt")
-                export_model(system.model, args.output / "inference.pt", step, train.annotation)
+                export_model(system.model, args.output / "inference.pt", step, train.annotation,
+                             {"unvoiced_noise": bool(args.switched_excitation)})
                 if retain:
                     atomic_save(state, args.output / f"step-{step:08d}.pt")
             with (args.output / "metrics.jsonl").open("a") as stream:

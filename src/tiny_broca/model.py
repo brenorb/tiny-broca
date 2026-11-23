@@ -202,7 +202,12 @@ class SourceFilter(nn.Module):
         # then the same whether it stands alone or is padded inside a batch.
         return filtered(F.pad(source, (0, fft // 2)), response, fft, hop, window)[:, :source.shape[-1]]
 
-    def forward(self, hidden, f0, lengths, noise=None, phase=None):
+    def forward(self, hidden, f0, lengths, noise=None, phase=None, voicing=None):
+        """``voicing`` [B, T] in 0..1 switches the harmonic branch's excitation:
+        pulses where the frame is voiced, the (unit-power) noise signal where it
+        is not, so both branches shape noise there. Without it the pulse train
+        never stops, and unvoiced sounds (s, x, f, ch) are built out of pulses,
+        which is heard as a buzz."""
         c = self.config
         frames = hidden.shape[1]
         samples = frames * c.hop
@@ -231,6 +236,14 @@ class SourceFilter(nn.Module):
             pulses = pulse_train(f0, c.sample_rate, c.hop, c.harmonic_limit, phase) * audible
             if noise is None:
                 noise = torch.randn(hidden.shape[0], samples, device=hidden.device)
+            if voicing is not None:
+                v = voicing.float().gather(1, torch.minimum(torch.arange(frames, device=voicing.device)[None], last))
+                v = torch.cat((v, v[:, -1:]), dim=1)
+                position = torch.arange(samples, device=hidden.device, dtype=torch.float32) / c.hop
+                low = position.floor().long()
+                weight = position - low
+                v = v[:, low] * (1 - weight) + v[:, low + 1] * weight
+                pulses = v * pulses + (1 - v) * noise * audible
             wave = (self._shape(pulses, harmonic_response, c.synth_fft, c.synth_hop, self.synth_window)
                     + self._shape(noise * audible, noise_response, c.noise_fft, c.noise_hop, self.noise_window))
             return wave * audible
@@ -344,7 +357,7 @@ class TinyBroca(nn.Module):
 
     @torch.inference_mode()
     def synthesize(self, tokens, stress, lengths, speakers, speed=1.0, pitch_shift=0.0, seed=0, pitch_range=1.0, pitch_jitter=0.0,
-                   voiced_vowels=True):
+                   voiced_vowels=True, unvoiced_noise=False):
         """Free-running synthesis: predicted durations, pitch, voicing and energy."""
         if not math.isfinite(speed) or not 0.25 <= speed <= 4 or not math.isfinite(pitch_shift) or not 0 <= pitch_range <= 3:
             raise ValueError("speed must be between 0.25 and 4, pitch_shift finite and pitch_range between 0 and 3")
@@ -371,5 +384,6 @@ class TinyBroca(nn.Module):
         pitch = prosody[..., 0] + pitch_shift
         if pitch_jitter > 0:
             pitch = pitch + self.pitch_wobble(pitch.shape, pitch_jitter, seed, pitch.device)
-        wave = self.vocoder(acoustic, self.frequency(pitch), frame_lengths, noise=noise.to(hidden.device))
+        voicing = (prosody[..., 1] > 0).to(acoustic.dtype) if unvoiced_noise else None
+        wave = self.vocoder(acoustic, self.frequency(pitch), frame_lengths, noise=noise.to(hidden.device), voicing=voicing)
         return wave, frame_lengths * self.config.hop, {"durations": durations, "prosody": prosody, "frame_mask": frame_mask}
