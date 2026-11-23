@@ -97,6 +97,9 @@ class NormaliserV2Tests(unittest.TestCase):
             with self.subTest(written=written):
                 self.assertEqual(normalize_text(written), spoken)
                 self.assertEqual(phonemize(written).unknown, ())
+                # The teacher reads spoken_form(); the annotation re-normalises
+                # that text, so it must come out the same.
+                self.assertEqual(normalize_text(text.spoken_form(written)), spoken)
 
     def test_reported_v0_failures(self):
         self.check([
