@@ -611,8 +611,8 @@ PM	pê eme
 PRF	pê érre éfe
 OAB	ó á bê
 CBF	cê bê éfe
-EUA	é u á
-UE	u é
+EUA	estados unidos
+UE	união europeia
 TV	tê vê
 DVD	dê vê dê
 CD	cê dê
@@ -952,6 +952,9 @@ _LONE_VOWEL = re.compile(r"\b(plano|vitamina|letra|classe|tipo|grupo|nota|série
                          re.IGNORECASE)
 _LETTER_HYPHEN_DIGIT = re.compile(r"(?<=[A-Za-zÀ-ú])-(?=\d)")
 _LONE_HASH = re.compile(r"(?<!\S)#(?!\S)")
+_LONE_STAR = re.compile(r"(?<!\d )(?<!\S)\*(?!\S)(?! \d)")
+_ABOUT = re.compile(r"(?<![\w~])~\s?(?=[\dR$])")
+_STREET = re.compile(r"(\b(?:[Nn]a|[Aa]|[Dd]a|[Pp]ela|[Àà]|[Dd]e|[Ee]m)\s+|^)R\.(?=\s[A-ZÀ-Ú])")
 _PER = re.compile(r"\s?/\s?(mês|dia|hora|semana|ano|noite|pessoa|unidade|litro|quilo|kg|aula|mensal)\b")
 _KM_MARKER = re.compile(r"(?<![\w\d])km\.?\s+(?=\d)", re.IGNORECASE)
 _CONTEXT_SCORE = re.compile(r"\b(venceu|perdeu|ganhou|empatou|terminou|ficou|placar|por|foi)\s+(\d{1,2})\s?[xX]\s?(\d{1,2})\b"
@@ -1550,6 +1553,9 @@ def spoken_form(text):
     text = _PLATE.sub(_plate, text)
     text = _LETTER_HYPHEN_DIGIT.sub(" ", text)
     text = _LONE_HASH.sub(" cerquilha ", text)
+    text = _LONE_STAR.sub(" asterisco ", text)
+    text = _ABOUT.sub(" cerca de ", text)
+    text = _STREET.sub(lambda m: m.group(1) + "Rua", text)
     text = _EMAIL.sub(_email, text)
     text = _URL.sub(_url, text)
     text = _HANDLE.sub(lambda m: " arroba " + m.group(1) + " ", text)
