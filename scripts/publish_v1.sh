@@ -25,7 +25,7 @@ RUN=runs/tiny-broca-v1
 EVAL=runs/eval-v1
 
 echo "== stage dataset additions"
-mkdir -p "$DS/batch4/data" "$DS/batch5/data" "$DS/annotations-v1" "$DS/generation"
+mkdir -p "$DS/batch4/data" "$DS/batch5/data" "$DS/annotations-v1" "$DS/generation" "$DS/references"
 "$PY" - "$DATE" "$DS" <<'PYEOF'
 import sys
 from pathlib import Path
@@ -42,6 +42,7 @@ for split in ("train", "validation", "test"):
 PYEOF
 cp data/annotations-v1/*.jsonl "$DS/annotations-v1/"
 cp data/corpus/v1_superseded.txt "$DS/v1_superseded.txt"
+cp data/refs/voices.json "$DS/references/voices.json"  # v0 credited F1 to M1's source clip
 cp scripts/generate_audio.py scripts/rescue_clips.py scripts/build_v1_corpus.py "$DS/generation/"
 cp docs/dataset-card/README.md "$DS/README.md"
 

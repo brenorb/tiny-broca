@@ -53,14 +53,14 @@ def main():
         total += conn.execute("SELECT COUNT(*) FROM clips").fetchone()[0]
         conn.close()
 
-    # (batch, split, file row position) -> source; the generator indexed
-    # sentences the same way.
-    source_map = {}
+    # (batch, split, file row position) -> (source, written sentence); the
+    # generator indexed sentences the same way.
+    corpus_rows = {}
     for batch in range(1, 10):
         for path in sorted(args.corpus.glob(f"batch{batch}/*.parquet")):
             table = pq.read_table(path)
-            for i, source in enumerate(table.column("source").to_pylist()):
-                source_map[(batch, path.stem, i)] = source
+            for i, row in enumerate(zip(table.column("source").to_pylist(), table.column("text").to_pylist())):
+                corpus_rows[(batch, path.stem, i)] = row
 
     args.output.mkdir(parents=True, exist_ok=True)
     splits = {"train": [], "validation": [], "test": []}
@@ -72,18 +72,20 @@ def main():
             missing_audio += 1
             print(f"skip {cid}: audio file missing", file=sys.stderr)
             continue
-        source = source_map.get((batch, split, index))
-        if source is None:
+        corpus_row = corpus_rows.get((batch, split, index))
+        if corpus_row is None:
             missing_source += 1
             print(f"skip {cid}: no corpus row for ({batch}, {split}, {index})", file=sys.stderr)
             continue
+        source, written = corpus_row
         ref = refs.get(voice, {})
         splits[split].append({
             "id": cid,
             "text_id": f"broca{batch:02d}_{index:05d}",
             "batch": batch,
             "split": split,
-            "text": text,
+            "text": text,  # what the teacher read (the spoken form in batches 4 and 5)
+            "written": written,
             "source": source,
             "source_license": "cc0-1.0" if source.startswith("cv") else "project-own",
             "source_url": "https://common-voice.org/datasets" if source.startswith("cv") else None,
@@ -105,7 +107,7 @@ def main():
     schema = pa.schema([
         pa.field("id", pa.string()), pa.field("text_id", pa.string()),
         pa.field("batch", pa.int64()), pa.field("split", pa.string()),
-        pa.field("text", pa.string()), pa.field("source", pa.string()),
+        pa.field("text", pa.string()), pa.field("written", pa.string()), pa.field("source", pa.string()),
         pa.field("source_license", pa.string()), pa.field("source_url", pa.string()),
         pa.field("voice", pa.string()), pa.field("audio", audio_field),
         pa.field("duration_seconds", pa.float64()), pa.field("sample_rate", pa.int64()),
