@@ -1745,6 +1745,103 @@ def _month_year(m):
     return f" {_MONTHS[month - 1]} de {number_words(year)} "
 
 
+# Month abbreviations, only where something marks them as a date: a slash
+# (8/dez, set/2026), or a day or year beside them (15 de out., 21 set 2025,
+# set. de 2026, em ago.). "mar" and "dez" are Portuguese words (the sea, ten),
+# so without a slash they need a day and a year, or "dia" before the day. "set"
+# (a game or film set) needs its period after "N de". Jan, Jun and Mai can be
+# names. The day stays a digit for the date and range rules; the year is read
+# here so it is never inflected.
+_MONTH_ABBR = {month[:3]: month for month in _MONTHS}
+_ANY_MONTH = "|".join(_MONTH_ABBR)
+_CLEAR_MONTH = "|".join(m for m in _MONTH_ABBR if m not in ("set", "mar", "dez"))
+_DOTTED_MONTH = "|".join(m for m in _MONTH_ABBR if m not in ("mar", "dez"))
+_DAY = r"0?[1-9]|[12]\d|3[01]"
+_DAY_SLASH_MONTH = re.compile(rf"(?<![\w/.,:-])({_DAY})/({_ANY_MONTH})(?:/(\d{{4}}|\d{{2}}))?(?![\w/%-]|[.,]\d)", re.IGNORECASE)
+_MONTH_SLASH_YEAR = re.compile(rf"(?<![\w/-])({_ANY_MONTH})/(\d{{4}}|\d{{2}})(?![\w/%-]|[.,]\d)", re.IGNORECASE)
+_DAY_MONTH_YEAR = re.compile(rf"(?<![\w/.,:-])({_DAY}) ({_ANY_MONTH})(\.)?((?<=\.) (?-i:de))? (\d{{4}})(?![\d/-])", re.IGNORECASE)
+_DAY_DE_MONTH = re.compile(rf"(?<![\w.,:/])({_DAY}|primeiro)\s+de\s+({_ANY_MONTH})\b(?!-)(\.(?=\s|$|[,;:)]))?"
+                           r"(?:\s+(?-i:de)\s+(\d{4})(?!\d))?", re.IGNORECASE)
+_MONTH_DOT_DE_YEAR = re.compile(rf"(?<![\w/-])({_DOTTED_MONTH})\. (?-i:de) (\d{{4}})(?!\d)", re.IGNORECASE)
+_DAY_MONTH_DOT = re.compile(rf"(?<![\w/.,:-])({_DAY}) ({_CLEAR_MONTH})\.(?=\s|$|[,;:)])", re.IGNORECASE)
+_SINCE_MONTH = re.compile(rf"\b((?i:em|até|desde))\s+({_CLEAR_MONTH})(\.(?=\s|$|[,;:)]))?(?:(?:\s+de)?\s+(\d{{4}})(?!\d))?(?![\w/-])")
+_DIA_BEFORE = re.compile(r"(?<!\bem )\bdia\s+$", re.IGNORECASE)  # not "hoje em dia"
+
+
+def _year_words(digits):
+    return number_words(int(digits if len(digits) == 4 else ("20" if int(digits) <= 40 else "19") + digits))
+
+
+def _month_name(token):
+    return _MONTH_ABBR[token.lower()]
+
+
+def _maybe_name(token):
+    return token.istitle() and token.lower() in ("jan", "jun", "mai")
+
+
+def _kept_period(m):
+    """An abbreviation's period stays only where it also ends the sentence."""
+    return "" if re.match(r"\s+[a-zà-ÿ]|[,;:)]", m.string[m.end():]) else "."
+
+
+def _day_slash_month(m):
+    year = f" de {_year_words(m.group(3))}" if m.group(3) else ""
+    return f" {int(m.group(1))} de {_month_name(m.group(2))}{year} "
+
+
+def _month_slash_year(m):
+    if m.group(1).lower() == "dez" and len(m.group(2)) == 2 and not 21 <= int(m.group(2)) <= 39:
+        return m.group(0)  # "uns dez/15 minutos", "nota dez/10"
+    return f" {_month_name(m.group(1))} de {_year_words(m.group(2))} "
+
+
+def _day_month_year(m):
+    day, token, dot, de, year = m.groups()
+    if dot and not de and token.lower() in ("set", "mar", "dez") and re.match(r"\s+\w", m.string[m.end():]):
+        return m.group(0)  # the period ends a sentence: "ela tirou 3 dez. 2025 foi um ótimo ano"
+    return f" {int(day)} de {_month_name(token)} de {_year_words(year)} "
+
+
+def _day_de_month(m):
+    day, token, dot, year = m.groups()
+    if not year:
+        if _maybe_name(token) or (token.istitle() and re.match(r"\s+[A-ZÀ-Ý]", m.string[m.end(2):])):
+            return m.group(0)  # "a camisa 10 de Jan Oblak"
+        month = token.lower()
+        if (month in ("mar", "dez") or (month == "set" and not dot)) and not _DIA_BEFORE.search(m.string[:m.start()]):
+            return m.group(0)  # "5 de rio e 3 de mar", "acertei 8 de dez", "15 de set e 10 de palco"
+    spoken = (day if day.lower() == "primeiro" else str(int(day))) + f" de {_month_name(token)}"
+    if year:
+        return spoken + f" de {_year_words(year)}"
+    return spoken + (_kept_period(m) if dot else "")
+
+
+def _day_month_dot(m):
+    if _maybe_name(m.group(2)):
+        return m.group(0)
+    return f"{int(m.group(1))} de {_month_name(m.group(2))}{_kept_period(m)}"
+
+
+def _since_month(m):
+    word, token, dot, year = m.groups()
+    if year:
+        return f"{word} {_month_name(token)} de {_year_words(year)}"
+    if not dot:
+        return m.group(0)
+    return f"{word} {_month_name(token)}{_kept_period(m)}"
+
+
+def _month_abbreviations(text):
+    text = _DAY_SLASH_MONTH.sub(_day_slash_month, text)
+    text = _MONTH_SLASH_YEAR.sub(_month_slash_year, text)
+    text = _DAY_MONTH_YEAR.sub(_day_month_year, text)
+    text = _DAY_DE_MONTH.sub(_day_de_month, text)
+    text = _MONTH_DOT_DE_YEAR.sub(lambda m: f" {_month_name(m.group(1))} de {_year_words(m.group(2))} ", text)
+    text = _DAY_MONTH_DOT.sub(_day_month_dot, text)
+    return _SINCE_MONTH.sub(_since_month, text)
+
+
 def _fraction_words(numerator, denominator, next_word=""):
     singular, plural = _FRACTIONS[denominator]
     if denominator == 2 and numerator == 1:
@@ -2010,9 +2107,13 @@ def _acronym_reading(token):
 _ACRONYM = re.compile(r"(?<![\w'])([A-Z][A-Z0-9]{1,9}s?)(?![\w'])")
 
 
-def _acronyms(text):
+def _shouted(text):
     letters = [c for c in text if c.isalpha()]
-    if letters and sum(c.isupper() for c in letters) / len(letters) > 0.6 and len(text.split()) >= 3:
+    return bool(letters) and sum(c.isupper() for c in letters) / len(letters) > 0.6 and len(text.split()) >= 3
+
+
+def _acronyms(text, shouted):
+    if shouted:
         # Shouted text: only listed acronyms are spelled; the rest is ordinary words.
         return _ACRONYM.sub(lambda m: (" " + ACRONYMS[m.group(1)] + " ") if m.group(1) in ACRONYMS else m.group(1), text)
 
@@ -2211,7 +2312,9 @@ def spoken_form(text):
     text = _roman(text)
     text = _TECH_NUMBER.sub(lambda m: f" {number_words(int(m.group(1)))} {_LETTER_NAMES[m.group(2).lower()]} ", text)
     text = _MONEY.sub(_money, text)
-    text = _acronyms(text)
+    shouted = _shouted(text)  # before the months below turn capitals into lower-case words
+    text = _month_abbreviations(text)
+    text = _acronyms(text, shouted)
     text = _CNPJ.sub(lambda m: " " + _spell_digits_groups(*m.groups()) + " ", text)
     text = _DATE_ISO.sub(_date_iso, text)
     text = _DATE_FULL.sub(_date_full, text)

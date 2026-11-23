@@ -233,7 +233,6 @@ class NormaliserV2Tests(unittest.TestCase):
             ("Esperamos que a Amazon prime pelo bom atendimento.", "esperamos que a ámazon prime pelo bom atendimento."),
             ("Viajamos de Paris a Nice de trem.", "viajamos de paris a nice de trem."),
             ("Cannes é mais cara que Nice.", "cannes é mais cara que nice."),
-            ("A fatura do set/2026 está em aberto.", "a fatura do set dois mil e vinte e seis está em aberto."),
             ("Acertei 8 de dez questões na prova.", "acertei oito de dez questões na prova."),
             ("Ô home, deixa de besteira!", "ô home, deixa de besteira!"),
         ])
@@ -249,6 +248,41 @@ class NormaliserV2Tests(unittest.TestCase):
             ("A série estreia na Amazon Prime Video.", "a série estreia na ámazon práime vídeo."),
             ("A memória ram do computador.", "a memória râmi do computador."),
             ("Volte para a home do site.", "volte para a rôme do saite."),
+        ])
+
+    def test_month_abbreviations_marked_as_dates(self):
+        self.check([
+            ("Vence em 8/dez.", "vence em oito de dezembro."),
+            ("Vence 15/set/2026.", "vence quinze de setembro de dois mil e vinte e seis."),
+            ("Fatura de mar/26.", "fatura de março de dois mil e vinte e seis."),
+            ("A fatura de dez/24 venceu.", "a fatura de dezembro de dois mil e vinte e quatro venceu."),
+            ("O prazo é 15 de set.", "o prazo é quinze de setembro."),
+            ("Inscrições até 15 de set. Depois disso, não há vaga.",
+             "inscrições até quinze de setembro. depois disso, não há vaga."),
+            ("Dia 15 de set. em São Paulo.", "dia quinze de setembro em são paulo."),
+            ("Prova dia 8 de dez.", "prova dia oito de dezembro."),
+            ("Foi em 8 de mar. de 2025.", "foi em oito de março de dois mil e vinte e cinco."),
+            ("Vence 3 de fev.", "vence três de fevereiro."),
+            ("Começa em ago. e termina em nov.", "começa em agosto e termina em novembro."),
+            ("Evento em 21 set 2025.", "evento em vinte e um de setembro de dois mil e vinte e cinco."),
+            ("Acesso em: 21 set. 2025.", "acesso em: vinte e um de setembro de dois mil e vinte e cinco."),
+            ("Desde jan. de 2024.", "desde janeiro de dois mil e vinte e quatro."),
+        ])
+
+    def test_month_lookalikes_stay_words(self):
+        self.check([
+            ("Acertei 8 de dez questões.", "acertei oito de dez questões."),
+            ("Acertei 8 de dez.", "acertei oito de dez."),
+            ("Primeiro de dez filhos.", "primeiro de dez filhos."),
+            ("Pescamos 5 de rio e 3 de mar.", "pescamos cinco de rio e três de mar."),
+            ("Cresci perto do mar. De 2010 a 2018 morei em Santos.",
+             "cresci perto do mar. de dois mil e dez a dois mil e dezoito morei em santos."),
+            ("O Brasil perdeu apenas 1 set.", "o brasil perdeu apenas um set."),
+            ("A equipe já está em set.", "a equipe já está em set."),
+            ("Comprei 1 set de 1000 peças.", "comprei um set de mil peças."),
+            ("Ela tirou 3 dez. 2025 foi um ótimo ano.", "ela tirou três dez. dois mil e vinte e cinco foi um ótimo ano."),
+            ("Demora uns dez/15 minutos.", "demora uns dez quinze minutos."),
+            ("A camisa 10 de Jan Oblak foi leiloada.", "a camisa dez de jan oblak foi leiloada."),
         ])
 
     def test_loanwords_in_capitals_are_not_spelled(self):
