@@ -1277,7 +1277,7 @@ PJ	pê jota
 RH	érre agá
 TI	tê i
 IA	i á
-CEO	ci ai ôu
+CEO	ci i ôu
 API	á pê i
 URL	u érre éle
 HTML	agá tê eme éle
