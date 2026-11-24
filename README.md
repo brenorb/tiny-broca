@@ -56,7 +56,7 @@ as i, and 131 new respellings for crypto, AI, tech and English names; see
 v1 fixes what v0 read wrongly (English loanwords, symbols, money, dates,
 acronyms) and makes unvoiced sounds from noise; on the probe suite, missed
 keywords fell from 242 to 18 of 574. See [docs/v1.md](docs/v1.md). The
-releases are tagged `v1.1`, `v1` and `v0`.
+releases are tagged `v1.1.1`, `v1.1`, `v1` and `v0`.
 
 ## Usage
 
