@@ -3,20 +3,24 @@
 #
 #   bash scripts/publish_v1.sh [--dry-run]
 #
-# Model repo (brenorb/tiny-broca): tags the current revision "v0", then
-# replaces the weights, ONNX, config, front end, samples and card with v1's.
-# Dataset repo (brenorb/tiny-broca, type dataset): adds batch4 (new coverage),
-# batch5 (regenerated v0 sentences), the v1 annotations and the list of v0
-# sentences v1 supersedes; the v0 files stay as they are.
+# GitHub: pushes main with its commits as they are, then tags the release v1.
+# Hugging Face: scripts/publish_hf.py uploads one commit per logical change to
+# the model and dataset repos (brenorb/tiny-broca). The current revisions are
+# tagged v0 first, and the v0 dataset files stay as they are.
 # Web demo: fetches the new assets and deploys to Cloudflare Pages.
 #
-# Prerequisites: scripts/v1_pipeline.sh finished, `hf auth login` done (the
-# stored token must be valid), `wrangler` logged in.
+# Safe to re-run after an interruption: finished steps are skipped.
+# Prerequisites: scripts/v1_pipeline.sh finished, everything committed,
+# `hf auth login` done (the stored token must be valid), `wrangler` logged in.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PY=.venv/bin/python
 DRY="${1:-}"
-DATE=$(date +%F)
+DATE=$("$PY" -c 'import json; print(json.load(open("data/dataset-v1/dataset.json"))["generated_at"][:10])')  # same file names on a re-run
+if [ "$DRY" != "--dry-run" ]; then
+  [ "$(git branch --show-current)" = main ] || { echo "publish from main" >&2; exit 1; }
+  [ -z "$(git status --porcelain)" ] || { echo "commit everything first: tag v1 must match what is published" >&2; exit 1; }
+fi
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
 DS="$STAGE/dataset"
@@ -58,34 +62,23 @@ cp docs/model-card/README.md "$MK/README.md"
 cp LICENSE "$MK/LICENSE.md"
 find "$STAGE" -type f | sed "s|$STAGE/||" | sort
 
+echo "== check the commit plan"
+"$PY" scripts/publish_hf.py --dataset "$DS" --model "$MK" --dry-run
 if [ "$DRY" = "--dry-run" ]; then
   echo "dry run: nothing uploaded"
   exit 0
 fi
 
-echo "== tag the v0 model revision, then upload"
-"$PY" - <<'PYEOF'
-from huggingface_hub import HfApi
-api = HfApi()
-refs = api.list_repo_refs("brenorb/tiny-broca")
-if not any(t.name == "v0" for t in refs.tags):
-    api.create_tag("brenorb/tiny-broca", tag="v0", tag_message="v0 release (118k steps)")
-refs = api.list_repo_refs("brenorb/tiny-broca", repo_type="dataset")
-if not any(t.name == "v0" for t in refs.tags):
-    api.create_tag("brenorb/tiny-broca", tag="v0", repo_type="dataset", tag_message="v0 dataset")
-PYEOF
-hf upload brenorb/tiny-broca "$DS" . --type dataset \
-  --commit-message "v1 data: $DATE" \
-  --commit-description "batch4 (new coverage), batch5 (v0 sentences regenerated from spoken forms), v1 annotations"
-hf upload brenorb/tiny-broca "$MK" . --type model \
-  --commit-message "v1: $DATE" \
-  --commit-description "Front end v2, regenerated number data, switched excitation (see docs/v1.md on GitHub)"
-"$PY" - <<'PYEOF'
-from huggingface_hub import HfApi
-api = HfApi()
-api.create_tag("brenorb/tiny-broca", tag="v1", tag_message="v1 release")
-api.create_tag("brenorb/tiny-broca", tag="v1", repo_type="dataset", tag_message="v1 dataset")
-PYEOF
+echo "== GitHub: the commits as they are"
+git push origin main
+
+echo "== Hugging Face: one commit per change"
+"$PY" scripts/publish_hf.py --dataset "$DS" --model "$MK"
+
+echo "== tag v1 on GitHub"
+git rev-parse -q --verify refs/tags/v1 >/dev/null || git tag -a v1 -m "tiny-broca v1"
+[ "$(git rev-parse 'v1^{commit}')" = "$(git rev-parse HEAD)" ] || { echo "tag v1 is not the published commit" >&2; exit 1; }
+git push origin v1
 
 echo "== web demo"
 bash web/fetch_assets.sh "$PWD"
