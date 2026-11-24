@@ -906,7 +906,6 @@ vegan	végan
 peeling	pílin
 piercing	pírcin
 tattoo	tatu
-yoga	ióga
 spa	ispá
 legging	léguin
 blush	blâxe
@@ -1207,6 +1206,137 @@ deliveries	delíveris
 barmen	bármen
 hobby	róbi
 hobbies	róbis
+exchange	equistchêindje
+seed	síde
+seed phrase	síde frêize
+private key	práivete quí
+public key	páblique quí
+hash	réxe
+hashrate	réxe rêite
+halving	rálvin
+node	nôude
+lightning	láitnin
+network	nétuórque
+lightning network	láitnin nétuórque
+satoshi	satôxi
+hodler	rôdler
+tether	téder
+ether	éter
+ripple	rípou
+polygon	póligon
+memecoin	mímecóin
+defi	difái
+web3	uébe três
+smart contract	ismarte cóntrecte
+fee	fí
+airdrop	érdrópe
+long	lóngue
+market	márquete
+bull market	búl márquete
+bear market	bér márquete
+pump	pâmpe
+dump	dâmpe
+rug pull	râgue púl
+binance	binânce
+coinbase	cóinbêise
+bybit	báibite
+ledger	léjer
+coldcard	côulde cárde
+cold wallet	côulde uólete
+hot wallet	róte uólete
+blockstream	blóquistrím
+taproot	téprúte
+segwit	ségue uíte
+multisig	multissígue
+mempool	mêmpúl
+testnet	testenéte
+mainnet	mêinenéte
+nostr	nóster
+cashu	cachú
+ecash	iquéxe
+strike	istráique
+peer-to-peer	pír tu pír
+proof of work	prúfe óve uórque
+proof of stake	prúfe óve istêique
+bitcoiner	bitecóiner
+shitcoin	xitecóin
+orange pill	órendje pil
+sound money	sáunde mâni
+bitdevs	bitedévis
+whitepaper	uáitepêiper
+on-chain	ontchêin
+off-chain	ófe tchêin
+layer	lêier
+sidechain	sáidetchêin
+bitcoin core	bitecóin córe
+llama	lhama
+grok	gróque
+perplexity	perpléksiti
+runway	ranuêi
+whisper	uísper
+lovable	lâvabou
+replit	réplite
+vercel	vércel
+supabase	supabêize
+zapier	zápier
+fine-tune	fáine tiúne
+fine tune	fáine tiúne
+engineering	endjiníring
+prompt engineering	prômpite endjiníring
+pytorch	páitórtche
+tensorflow	ténsorflôu
+jupyter	júpiter
+open source	ôupen sórce
+label	lêibou
+batch	bétche
+checkpoint	tchéquipóinte
+deepfake	dípefêique
+coding	côudin
+vibe coding	váibe côudin
+reasoning	rízonin
+hugging face	râguin fêice
+stable diffusion	istêibou difiúzon
+follow	fólou
+unfollow	anfólou
+push	púxe
+edge	édje
+excel	écsel
+dropbox	drópebóx
+icloud	aicláude
+onedrive	uândráive
+airpods	érpódis
+bluesky	blusscái
+substack	sâbstéque
+medium	mídium
+patreon	pêitreon
+tyson	táisson
+mike	máique
+ryan	ráian
+taylor	têilor
+kyle	cáiou
+byron	báiron
+cyber	sáiber
+cyberbullying	sáiberbúlin
+freestyle	fristáile
+lifestyle	laifistáile
+style	istáile
+dry fit	drái fíte
+sky	iscái
+fly	flái
+daisy	dêizi
+clayton	clêiton
+wayne	uêine
+haley	rêili
+amy	êimi
+bryan	bráian
+mary	méri
+sandy	sêndi
+nancy	nênsi
+harry	réri
+wendy	uêndi
+on chain	ontchêin
+off chain	ófe tchêin
+peer to peer	pír tu pír
 """
 
 # Acronyms, matched case-sensitively in upper case (a lower-case "s" plural is
@@ -1338,6 +1468,8 @@ DJ	didjêi
 MP3	eme pê três
 MP4	eme pê quatro
 OFF	ófe
+HODL	rôdou
+FUD	fâde
 """
 
 _ABBREVIATIONS = (
@@ -1585,6 +1717,10 @@ _LONE_CONSONANT = re.compile(r"(?<![\w'.])([B-DF-HJ-NP-TV-Z])(?![\w'])")
 _LONE_VOWEL = re.compile(r"\b(plano|vitamina|letra|classe|tipo|grupo|nota|série|opção|item|bloco|setor|ala|portão|"
                          r"fila|turma|seção|categoria|modelo|versão|lado|prédio|torre|sala)\s+([AEIOU])(?![\w'])",
                          re.IGNORECASE)
+# A lone y is the letter (eixo y, f(x, y), a letra 'y'), except a lower-case y between
+# capitalised words, which is the Spanish conjunction and reads as i (Ortega y Gasset).
+_SPANISH_Y = re.compile(r"(\b[A-ZÀ-Ú][^\W\d_]*)(\s+)y(\s+)(?=[A-ZÀ-Ú])")
+_LONE_Y = re.compile(r"(?<!\w)(?<!\w')y(?!\w)(?!'\w)", re.IGNORECASE)
 _LETTER_HYPHEN_DIGIT = re.compile(r"(?<=[A-Za-zÀ-ú])-(?=\d)")
 _LONE_HASH = re.compile(r"(?<!\S)#(?!\S)")
 _LONE_STAR = re.compile(r"(?<!\d )(?<!\S)\*(?!\S)(?! \d)")
@@ -2417,9 +2553,15 @@ def spoken_form(text):
     text = _LOANWORD.sub(_loanword, text)
     text = _SLANG_RE.sub(_slang, text)
     text = _LONE_VOWEL.sub(lambda m: m.group(1) + " " + _LETTER_NAMES[m.group(2).lower()], text)
+    text = _SPANISH_Y.sub(r"\1\2i\3", text)
+    text = _LONE_Y.sub("ípsilon", text)
     text = _LONE_CONSONANT.sub(lambda m: " " + _LETTER_NAMES[m.group(1).lower()] + " ", text)
     text = _CONSONANTS_ONLY.sub(lambda m: " " + _spell_letters(m.group(0)) + " ", text)
     text = _cleanup(text)
+    # Portuguese spelling reads y as i (Paraty, Ypiranga, Stefany, Yuri). English words that
+    # say it otherwise (byte, Tyson, Taylor) are respelled by the loanword table, which has run.
+    # After _cleanup, which folds ý, ÿ, ỹ... into y.
+    text = text.replace("y", "i").replace("Y", "I")
     text = _REPEATED_PUNCT.sub(lambda m: m.group(1) or m.group(2), text)
     text = re.sub(r"\s+", " ", text)
     text = _SPACE_BEFORE_PUNCT.sub(r"\1", text)

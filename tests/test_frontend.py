@@ -116,7 +116,7 @@ class NormaliserV2Tests(unittest.TestCase):
             ("2 x 3 = 6", "dois vezes três igual a seis"),
             ("Se a > b então b < a.", "se á maior que bê então bê menor que á."),
             ("5 >= 3 e 2 != 3", "cinco maior ou igual a três e dois diferente de três"),
-            ("Tom & Jerry", "tom e jerry"),
+            ("Tom & Jerry", "tom e jerri"),
         ])
 
     def test_dates(self):
@@ -213,6 +213,38 @@ class NormaliserV2Tests(unittest.TestCase):
             ("O overfitting do dataset.", "o overfítin do dêitasséte."),
             ("Os databases em Python.", "os dêitabeices em páiton."),
             ("Comprei uma bike e uma air fryer.", "comprei uma báique e uma ér fráier."),
+        ])
+
+    def test_crypto_and_ai_terms_are_respelled(self):
+        self.check([
+            ("Comprei bitcoins na exchange e guardei na cold wallet.",
+             "comprei bitecóins na equistchêindje e guardei na côulde uólete."),
+            ("Os nodes da Lightning Network.", "os nôudes da láitnin nétuórque."),
+            ("Web3, DeFi e smart contracts.", "uébe três, difái e ismarte cóntrectes."),
+            ("Ele faz HODL e ignora o FUD.", "ele faz rôdou e ignora o fâde."),
+            ("O on-chain, o off chain e o Cashu.", "o ontchêin, o ófe tchêin e o cachú."),
+            ("O fine-tuning no PyTorch e o deploy na Vercel.",
+             "o fáine túnin no páitórtche e o diplói na vércel."),
+        ])
+
+    def test_y_reads_as_i(self):
+        self.check([
+            ("Fomos a Paraty e ao Itamaraty.", "fomos a parati e ao itamarati."),
+            ("Fiz yoga e comi yogurte.", "fiz ioga e comi iogurte."),
+            ("O Yuri, o Yan e a Stefany.", "o iuri, o ian e a stefani."),
+            ("José Ortega y Gasset.", "josé ortega i gasset."),
+            ("Ramón y Cajal e Fernando y Isabel.", "ramón i cajal e fernando i isabel."),
+            ("Ýbarra, Haÿ-les-Roses, Lý, Mỹ.", "ibarra, hai-les-roses, li, mi."),
+            # English words that say y otherwise are in the loanword table.
+            ("O byte, o Python e o Mike Tyson.", "o báite, o páiton e o máique táisson."),
+            # The letter keeps its name where something names it.
+            ("O eixo y e a letra y.", "o eixo ípsilon e a letra ípsilon."),
+            ("Os eixos x e y.", "os eixos x e ípsilon."),
+            ("Calcule f(x, y).", "calcule f(x, ípsilon)."),
+            ("Se x + y = 3, então 2y = 4.",
+             "se xis mais ípsilon igual a três, então dois ípsilon igual a quatro."),
+            ("Ele mora em NY e tem um BYD.", "ele mora em ene ípsilon e tem um bê ípsilon dê."),
+            ("O eixo e a roda.", "o eixo e a roda."),
         ])
 
     def test_portuguese_plurals_are_not_loanwords(self):
