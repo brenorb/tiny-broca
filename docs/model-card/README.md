@@ -14,8 +14,8 @@ datasets:
 
 tiny-broca is a small **Brazilian Portuguese** text-to-speech model with two
 voices, F1 (female) and M1 (male). The complete model, including the waveform
-generator, has 4.5M parameters and was trained from scratch on 17 hours
-of synthetic speech.
+generator, has 4.5M parameters and was trained from scratch on synthetic
+speech.
 
 <audio controls src="https://huggingface.co/brenorb/tiny-broca/resolve/main/samples/F1-1.wav"></audio>
 
@@ -31,6 +31,17 @@ of synthetic speech.
 | Pretrained weights in the model | None |
 | License | Apache-2.0 |
 
+## v1
+
+v1 fixes what v0 read wrongly. The front end now writes out what a Brazilian
+reader says: `online` → "onlaine", `4 > 3` → "quatro maior que três",
+`R$3,00` → "três reais", `14/03` → "quatorze de março", along with acronyms,
+units, ordinals, roman numerals, dates and 948 English loanwords. The training
+audio was re-read from these spoken forms, and unvoiced sounds are now made
+from noise. On the probe suite, missed keywords fell from 242 to 18 of 574.
+The v0 release is tagged `v0` in this repository. Details:
+[docs/v1.md](https://github.com/brenorb/tiny-broca/blob/main/docs/v1.md).
+
 ## Files
 
 | File | Contents |
@@ -38,7 +49,7 @@ of synthetic speech.
 | `tiny-broca.pt` | PyTorch weights, float32 |
 | `onnx/model.onnx` | ONNX export, float32, opset 17 |
 | `config.json` | Released settings: the model block (sample rate, windows, voices, vocabulary size) plus the phonemiser identity, letter vocabulary, and ONNX inputs/outputs that the web demo reads |
-| `text.py` | The front end module, verbatim (the web demo runs it in the browser) |
+| `text.py` | The front end module (version 2), verbatim (the web demo runs it in the browser) |
 | `samples/` | The audio on this page |
 
 ## Samples
@@ -152,8 +163,8 @@ once per frame (256 samples, 10.7 ms). This part has 25,862 parameters.
 
 | | |
 |---|---|
-| Data | [brenorb/tiny-broca](https://huggingface.co/datasets/brenorb/tiny-broca): 9,384 sentences, 16,434 clips, two voices |
-| Steps | 118,000 |
+| Data | [brenorb/tiny-broca](https://huggingface.co/datasets/brenorb/tiny-broca), v1 training set: 12,026 sentences, 26,130 clips, 28.2 hours, two voices |
+| Steps | 148,000: 118,000 for v0, then 30,000 on the v1 data |
 | Losses | Multi-resolution spectral losses; adversarial loss with multi-period and multi-resolution discriminators after step 8,000 |
 | Hardware | Apple M4 Pro, 18-core, MPS |
 
@@ -170,11 +181,38 @@ continues for 14,000 more steps (to step 118,000) on the same data plus
 `batch3`, money phrases: the generator tends to rush long number strings, so
 the later rounds give money values extra weight.
 
+v1 continues from v0's full training state (step 118,000) for 30,000 steps on
+the v1 training set: `batch1` and `batch2` without the 2,821 v0 sentences that
+had been read from digits and symbols, plus `batch4` (new coverage) and
+`batch5` (those v0 sentences re-read from their spoken form). From v1 on, the
+harmonic branch of the waveform head is excited with noise in unvoiced frames.
+
 ## Evaluation
 
-Word error rate of synthesized speech, transcribed with Whisper
-(multilingual, pt). The recordings of the same sentences are scored the same
-way for reference. (Pending the training run.)
+The synthesized speech is transcribed automatically and compared with the
+words the text should produce. This measures whether the words come out, not
+how natural they sound.
+
+**Probe suite.** 287 sentences in 29 categories (numbers, money, dates,
+symbols, acronyms, loanwords, stress, prosody...), read by both voices: 574
+clips, transcribed by Whisper medium and parakeet. A keyword counts as missed
+when neither of them hears it.
+
+| | Keywords missed | Word error rate |
+|---|---:|---:|
+| v0 | 242 of 574 | 20.0% |
+| v0 weights with the v1 front end | 43 of 574 | 6.3% |
+| v1 | 18 of 574 | 2.5% |
+
+Of v1's 18 misses, 8 are roman numerals the transcribers write as numerals
+("Dom Pedro II" for "segundo"), and 2 are "CEO", whose respelling was fixed
+after the run. The rest: "Copa XX" read as letters, "Paraty" and "Itu",
+"story" and "crush".
+
+**Held-out sentences** (Whisper small, numbers included). On 16 sentences
+outside every split, v0 had 8.1% word error and v1 has 1.5%. On 50 test-split
+clips v1 has 2.1%; the teacher's own recordings of the same sentences have
+2.8%.
 
 ## Limitations
 
@@ -183,7 +221,11 @@ way for reference. (Pending the training run.)
 - The same text is always read the same way. There is no sampling of prosody.
 - Very long number strings (a dozen or more words) are read a little faster
   than the training data; the duration predictor compresses them slightly.
-- Foreign names and unusual spellings are often mispronounced.
+- Words outside the loanword table, foreign names and unusual spellings
+  (Paraty) are often mispronounced.
+- Ambiguous text gets one reading. A number from 1900 to 2099 is read as a
+  year only where something marks a date, and an English word that is also
+  Portuguese ("set", "date") is respelled only inside a phrase that settles it.
 - No streaming.
 - The training data is itself synthetic, so the model cannot be more natural
   than the model that generated it.
