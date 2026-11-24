@@ -49,10 +49,14 @@ label the training data).
 
 ## Versions
 
-v1 is the current release. It fixes what v0 read wrongly (English loanwords,
-symbols, money, dates, acronyms) and makes unvoiced sounds from noise; on the
-probe suite, missed keywords fell from 242 to 18 of 574. See
-[docs/v1.md](docs/v1.md). The v0 release is tagged `v0`.
+v1.1 is the current release: the v1 model with an updated front end (y read
+as i, and 131 new respellings for crypto, AI, tech and English names; see
+[docs/v1.md](docs/v1.md#v11)).
+
+v1 fixes what v0 read wrongly (English loanwords, symbols, money, dates,
+acronyms) and makes unvoiced sounds from noise; on the probe suite, missed
+keywords fell from 242 to 18 of 574. See [docs/v1.md](docs/v1.md). The
+releases are tagged `v1.1`, `v1` and `v0`.
 
 ## Usage
 

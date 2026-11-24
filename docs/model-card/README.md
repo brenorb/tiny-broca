@@ -31,6 +31,22 @@ speech.
 | Pretrained weights in the model | None |
 | License | Apache-2.0 |
 
+## v1.1
+
+v1.1 changes only the front end. The weights and the ONNX model are v1's.
+
+- A y reads as i, as in Portuguese spelling: `Paraty` → "parati", `Yuri` →
+  "iuri", `Stefany` → "stefani". English words that say it otherwise are in
+  the respelling table (`byte` → "báite", `Tyson` → "táisson"). A lone y is the
+  letter, "ípsilon" (`eixo y`, `f(x, y)`), except the Spanish conjunction
+  between names (`Ortega y Gasset`).
+- 131 new respellings for the crypto, AI and tech words Brazilians don't
+  translate, and for English names: `exchange` → "equistchêindje",
+  `Lightning Network` → "láitnin nétuórque", `smart contract` → "ismarte
+  cóntrecte", `DeFi` → "difái", `HODL` → "rôdou", `PyTorch` → "páitórtche",
+  `Hugging Face` → "râguin fêice", `Daisy` → "dêizi". The table now has 1,078
+  loanwords and 127 acronyms.
+
 ## v1
 
 v1 fixes what v0 read wrongly. The front end now writes out what a Brazilian
@@ -206,7 +222,7 @@ when neither of them hears it.
 
 Of v1's 18 misses, 8 are roman numerals the transcribers write as numerals
 ("Dom Pedro II" for "segundo"), and 2 are "CEO", whose respelling was fixed
-after the run. The rest: "Copa XX" read as letters, "Paraty" and "Itu",
+after the run. The rest: "Copa XX" read as letters, "Paraty" (fixed in v1.1) and "Itu",
 "story" and "crush".
 
 **Held-out sentences** (Whisper small, numbers included). On 16 sentences
@@ -221,8 +237,9 @@ clips v1 has 2.1%; the teacher's own recordings of the same sentences have
 - The same text is always read the same way. There is no sampling of prosody.
 - Very long number strings (a dozen or more words) are read a little faster
   than the training data; the duration predictor compresses them slightly.
-- Words outside the loanword table, foreign names and unusual spellings
-  (Paraty) are often mispronounced.
+- Words outside the loanword table and foreign names are often
+  mispronounced. English-derived names ending in -y are stressed on the last
+  syllable ("Lucy" is read "lu-CÍ").
 - Ambiguous text gets one reading. A number from 1900 to 2099 is read as a
   year only where something marks a date, and an English word that is also
   Portuguese ("set", "date") is respelled only inside a phrase that settles it.
