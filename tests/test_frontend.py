@@ -285,6 +285,35 @@ class NormaliserV2Tests(unittest.TestCase):
             ("A camisa 10 de Jan Oblak foi leiloada.", "a camisa dez de jan oblak foi leiloada."),
         ])
 
+    def test_years_are_not_inflected(self):
+        self.check([
+            ("Em 2023 ela mudou.", "em dois mil e vinte e três ela mudou."),
+            ("Em 1998 era diferente.", "em mil novecentos e noventa e oito era diferente."),
+            ("Em 1930 Vargas assumiu.", "em mil novecentos e trinta vargas assumiu."),
+            ("Em 2023 novas regras entraram em vigor.", "em dois mil e vinte e três novas regras entraram em vigor."),
+            ("Em março de 2020 escolas fecharam.", "em março de dois mil e vinte escolas fecharam."),
+            ("Desde 2010 minha mãe mora aqui.", "desde dois mil e dez minha mãe mora aqui."),
+            ("Foi em 2023 mas não em 2024.", "foi em dois mil e vinte e três mas não em dois mil e vinte e quatro."),
+            ("De 1930 a 1945 Vargas governou.", "de mil novecentos e trinta a mil novecentos e quarenta e cinco vargas governou."),
+            ("Nos anos 2000 empresas cresceram.", "nos anos dois mil empresas cresceram."),
+            ("1998 era um bom ano.", "mil novecentos e noventa e oito era um bom ano."),
+        ])
+
+    def test_counts_that_look_like_years_stay_feminine(self):
+        self.check([
+            ("Foram 2023 pessoas.", "foram duas mil e vinte e três pessoas."),
+            ("O programa chegou em 2000 escolas.", "o programa chegou em duas mil escolas."),
+            ("A rede atua em 1934 cidades.", "a rede atua em mil novecentas e trinta e quatro cidades."),
+            ("Em 2000 escolas faltou merenda.", "em duas mil escolas faltou merenda."),
+            ("1200 dessas pessoas perderam tudo.", "mil e duzentas dessas pessoas perderam tudo."),
+            ("Das 2000 vagas, 1500 são para ampla concorrência.",
+             "das duas mil vagas, mil e quinhentas são para ampla concorrência."),
+            ("Só 1 dessas opções funciona.", "só uma dessas opções funciona."),
+            ("A rede fechou 200 de suas lojas.", "a rede fechou duzentas de suas lojas."),
+            ("Foi um ano de 2000 mortes no trânsito.", "foi um ano de duas mil mortes no trânsito."),
+            ("A entrega de outubro de 2015 cestas foi feita.", "a entrega de outubro de duas mil e quinze cestas foi feita."),
+        ])
+
     def test_loanwords_in_capitals_are_not_spelled(self):
         self.check([
             ("Aproveite a BLACK FRIDAY hoje.", "aproveite a bléque fráidei hoje."),

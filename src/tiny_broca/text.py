@@ -2205,6 +2205,61 @@ def _slang(m):
     return token
 
 
+_Y = r"(?:19|20)\d\d"
+_YEAR = re.compile(_Y)  # as a year is written: no thousands dot
+_YEAR_SPAN = re.compile(rf"\b(?:de|entre)\s+{_Y}\s+(?:a|e)\s+{_Y}(?!\d)", re.IGNORECASE)
+_OPENS_CLAUSE = r"(?:^\s*|[.!?:;(\"\n]\s*)(?=(?-i:[A-ZÀ-Ý]))"  # a closing quote or a list goes on in lower case
+# What before a number marks a date. After "named" (or "decade", for a number
+# ending in 0) it is a year whatever follows; after "likely" a round number can
+# be a count; after the others any plural can.
+_YEAR_MARK = re.compile(
+    r"(?:(?P<named>\bem\s+pleno|\bem\s+meados\s+de|\b(?:d[ée]cada|n?as\s+d[ée]cadas)\s+de|" + _OPENS_CLAUSE + r"no\s+ano(?:\s+de)?)"
+    r"|(?P<decade>\b(?:nos|dos|aos|pelos)\s+anos)"
+    r"|(?P<likely>" + _OPENS_CLAUSE + r"(?:em|desde|no\s+(?:in[íi]cio|começo|final|fim)\s+de)"
+    r"|(?<![^\W\d_]\sde\s)\b(?:" + "|".join(_MONTHS) + r")\s+de)"  # not "a entrega de maio de 1980 cestas"
+    r"|\bem|\bdesde|\bno\s+(?:ano(?:\s+de)?|(?:in[íi]cio|começo|final|fim)\s+de)|\b(?:o|do|ao|pelo)\s+ano\s+de|" + _OPENS_CLAUSE + r"(?:até|após)|\b(?:antes|depois)\s+de"
+    r"|\b(?:censo|eleição|eleições|copa|olimpíadas?|verão|inverno|primavera|outono|natal|carnaval|crise|pandemia"
+    r"|constituição|lei|reforma|edição|temporada|guerra|revolução|golpe)\s+de)"
+    r"\s+(?:" + _Y + r"\s+(?:a|e|ou|até)\s+)?$", re.IGNORECASE)
+_CLAUSE_START = re.compile(r"(?:^\s*|[.!?:;(\"\n]\s*)$")
+_PARTITIVE = re.compile(r"\s+(?:de|delas|dessas|destas|daquelas)\b", re.IGNORECASE)
+# Plural words that start a new phrase after a year; a number never counts them.
+_AFTER_A_YEAR = frozenset("""elas nas pelas umas numas suas minhas tuas nossas vossas essas estas aquelas nessas nestas
+naquelas algumas nenhumas todas muitas poucas tantas várias duas mas""".split())
+# Singular verbs: a count opening a clause would take the plural, so this is a year.
+_YEAR_VERBS = frozenset("era estava seria tinha havia começa termina acaba marca continua mostra".split())
+
+
+def _counts_feminine(digits, value, word, text, start, end):
+    """Whether a number agrees with the feminine-looking word after it.
+
+    The next word alone cannot tell a year from a count whose noun came earlier
+    ("Das 2000 vagas, 1500 são..."), so a number from 1900 to 2099 is a year
+    only when something marks it: a word before it ("Em 2023 ela mudou", "Em
+    março de 2020 escolas fecharam"), a range ("De 1930 a 1945 Vargas governou")
+    or a singular verb ("1998 era"). After a mark a plural can still be the noun
+    counted: "chegou em 1934 escolas", "Em 2000 dessas pessoas".
+    """
+    if not word or not _is_feminine(word):
+        return False
+    if not _YEAR.fullmatch(digits):
+        return True
+    lower = word.lower()
+    if lower in _YEAR_VERBS and _CLAUSE_START.search(text, max(0, start - 4), start):
+        return False
+    mark = _YEAR_MARK.search(text, max(0, start - 48), start)
+    span = _YEAR_SPAN.search(text, max(0, start - 24), end + 16)
+    spanned = bool(span) and span.start() < start < span.end()
+    if not (mark or spanned) or _PARTITIVE.match(text, end):
+        return True
+    named = mark and (mark.group("named") or (mark.group("decade") and not value % 10))
+    if not lower.endswith("s") or lower in _AFTER_A_YEAR or named:
+        return False
+    if mark and mark.group("likely"):
+        return not (value % 100 or word.istitle())
+    return not (value % 100 and word.istitle())
+
+
 def _integers(text):
     def replace(m):
         digits = m.group(1)
@@ -2219,7 +2274,7 @@ def _integers(text):
         time_of_day = bool(re.match(r"\s+(?:e\s+meia\s+)?da\s+(?:manhã|tarde|noite|madrugada)\b", following))
         feminine = (before in ("à", "às", "das", "pelas") or time_of_day
                     or (before in ("as", "são") and not next_word)
-                    or (bool(next_word) and _is_feminine(next_word)))
+                    or _counts_feminine(digits, value, next_word, text, m.start(), m.end()))
         if before == "dia" and value == 1:
             return " primeiro "
         return " " + _count_words(value, feminine, next_word, bool(re.match(r"\s+de\b", following))) + " "
