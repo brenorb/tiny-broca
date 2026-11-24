@@ -33,16 +33,26 @@ mkdir -p "$DS/batch4/data" "$DS/batch5/data" "$DS/annotations-v1" "$DS/generatio
 "$PY" - "$DATE" "$DS" <<'PYEOF'
 import sys
 from pathlib import Path
+import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 date, ds = sys.argv[1], Path(sys.argv[2])
+# A few hundred rows at a time: the audio column of a whole split is more than
+# Arrow can convert in one piece (2 GB), and it keeps memory low.
 for split in ("train", "validation", "test"):
-    table = pq.read_table(f"data/dataset-v1/{split}.parquet")
-    for batch in (4, 5):
-        part = table.filter(pc.equal(table["batch"], batch))
-        if len(part):
-            pq.write_table(part, ds / f"batch{batch}/data/{split}-{date}.parquet")
-            print(f"batch{batch} {split}: {len(part)} clips")
+    writers, counts = {}, {}
+    for rows in pq.ParquetFile(f"data/dataset-v1/{split}.parquet").iter_batches(batch_size=256):
+        table = pa.Table.from_batches([rows])
+        for batch in (4, 5):
+            part = table.filter(pc.equal(table["batch"], batch))
+            if len(part):
+                if batch not in writers:
+                    writers[batch] = pq.ParquetWriter(ds / f"batch{batch}/data/{split}-{date}.parquet", part.schema)
+                writers[batch].write_table(part)
+                counts[batch] = counts.get(batch, 0) + len(part)
+    for batch, writer in sorted(writers.items()):
+        writer.close()
+        print(f"batch{batch} {split}: {counts[batch]} clips")
 PYEOF
 cp data/annotations-v1/*.jsonl "$DS/annotations-v1/"
 cp data/corpus/v1_superseded.txt "$DS/v1_superseded.txt"
