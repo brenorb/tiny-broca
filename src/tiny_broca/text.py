@@ -1206,7 +1206,7 @@ deliveries	delíveris
 barmen	bármen
 hobby	róbi
 hobbies	róbis
-exchange	equistchêindje
+exchange	ékstchenge
 seed	síde
 seed phrase	síde frêize
 private key	práivete quí
@@ -1219,7 +1219,8 @@ lightning	láitnin
 network	nétuórque
 lightning network	láitnin nétuórque
 satoshi	satôxi
-hodler	rôdler
+hodler	ródler
+hodl	ródou
 tether	téder
 ether	éter
 ripple	rípou
@@ -1468,7 +1469,7 @@ DJ	didjêi
 MP3	eme pê três
 MP4	eme pê quatro
 OFF	ófe
-HODL	rôdou
+HODL	ródou
 FUD	fâde
 """
 

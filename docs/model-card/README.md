@@ -41,10 +41,10 @@ v1.1 changes only the front end. The weights and the ONNX model are v1's.
   letter, "ípsilon" (`eixo y`, `f(x, y)`), except the Spanish conjunction
   between names (`Ortega y Gasset`).
 - 131 new respellings for the crypto, AI and tech words Brazilians don't
-  translate, and for English names: `exchange` → "equistchêindje",
+  translate, and for English names: `exchange` → "ékstchenge",
   `Lightning Network` → "láitnin nétuórque", `smart contract` → "ismarte
-  cóntrecte", `DeFi` → "difái", `HODL` → "rôdou", `PyTorch` → "páitórtche",
-  `Hugging Face` → "râguin fêice", `Daisy` → "dêizi". The table now has 1,078
+  cóntrecte", `DeFi` → "difái", `HODL` → "ródou", `PyTorch` → "páitórtche",
+  `Hugging Face` → "râguin fêice", `Daisy` → "dêizi". The table now has 1,079
   loanwords and 127 acronyms.
 
 ## v1

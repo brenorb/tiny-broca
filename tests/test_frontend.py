@@ -218,10 +218,11 @@ class NormaliserV2Tests(unittest.TestCase):
     def test_crypto_and_ai_terms_are_respelled(self):
         self.check([
             ("Comprei bitcoins na exchange e guardei na cold wallet.",
-             "comprei bitecóins na equistchêindje e guardei na côulde uólete."),
+             "comprei bitecóins na ékstchenge e guardei na côulde uólete."),
             ("Os nodes da Lightning Network.", "os nôudes da láitnin nétuórque."),
             ("Web3, DeFi e smart contracts.", "uébe três, difái e ismarte cóntrectes."),
-            ("Ele faz HODL e ignora o FUD.", "ele faz rôdou e ignora o fâde."),
+            ("Ele faz HODL e ignora o FUD.", "ele faz ródou e ignora o fâde."),
+            ("Quem faz hodl é hodler.", "quem faz ródou é ródler."),
             ("O on-chain, o off chain e o Cashu.", "o ontchêin, o ófe tchêin e o cachú."),
             ("O fine-tuning no PyTorch e o deploy na Vercel.",
              "o fáine túnin no páitórtche e o diplói na vércel."),
