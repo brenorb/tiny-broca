@@ -23,4 +23,7 @@ get() {
 get onnx/model.onnx public/assets/model.onnx
 get config.json public/assets/config.json
 cp "$REPO/src/tiny_broca/text.py" public/assets/text.py
+# The browser caches the assets under this key (see worker.js): it changes
+# whenever a served file does, so returning visitors fetch the new release.
+cat public/assets/model.onnx public/assets/config.json public/assets/text.py | shasum -a 256 | cut -c1-16 > public/assets/version.txt
 ls -l public/assets

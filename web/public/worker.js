@@ -19,8 +19,22 @@ const asset = (path) => new URL(path, ROOT).href;
 
 const status = (text, progress) => postMessage({ type: "status", text, progress });
 
-// Bump when the files under assets/ change, so browsers fetch them again.
-const VERSION = "1";
+// The cache key: a hash of the served assets, written by fetch_assets.sh into
+// assets/version.txt, so every release reaches returning visitors. Caches of
+// earlier releases are deleted.
+let VERSION = "1";
+
+async function loadVersion() {
+  try {
+    const response = await fetch(asset("assets/version.txt"), { cache: "no-store" });
+    if (response.ok) VERSION = (await response.text()).trim() || VERSION;
+  } catch (error) { /* keep the default key */ }
+  try {
+    for (const name of await caches.keys()) {
+      if (name.startsWith("tiny-broca-") && name !== "tiny-broca-" + VERSION) await caches.delete(name);
+    }
+  } catch (error) { /* cache storage unavailable */ }
+}
 
 // Downloaded files are kept in the browser's cache storage: a second visit starts without the network.
 async function download(url, label) {
@@ -152,6 +166,7 @@ onmessage = async ({ data }) => {
   try {
     if (data.type === "load") {
       ROOT = data.base || "/";
+      await loadVersion();
       await Promise.all([loadFrontEnd(), loadModel()]);
       postMessage({ type: "ready", voices: config.voices });
     } else if (data.type === "speak") {
