@@ -27,14 +27,18 @@ The front end is where Portuguese diverges. No permissive Portuguese
 pronouncing dictionary exists (eSpeak's Portuguese voice falls back to English
 phonemes for most words), so the model reads **letters**, the way a human
 reader does: 58 letter/punctuation symbols plus a stress feature per letter
-(explicit accents win; else the penultimate syllable, or the last after a
-word-final L, N, R or X). Numbers, dates, times, money, percentages and
-document identifiers are normalised to words with Brazilian conventions
-(`1.234,56` → "mil duzentos e trinta e quatro vírgula cinquenta e seis").
+from a Portuguese syllabifier (explicit accents, oxytone endings, hiatus).
+Numbers, dates, times, money, percentages, symbols and document identifiers
+are written out as a Brazilian reader says them (`R$3,00` → "três reais",
+`4 > 3` → "quatro maior que três", `14/03` → "quatorze de março"), acronyms
+are spelled with Portuguese letter names, and English loanwords are respelled
+the Brazilian way (`online` → "onlaine").
 
 The training audio is synthetic: Qwen3-TTS 1.7B generated 19,504 clips
-(about 21 hours) across three batches; 16,434 clips (about 17 hours) survived
-quality control, every sentence read by both voices. The two voices are clones
+(about 21 hours) across three batches for v0; 16,434 clips (about 17 hours)
+survived quality control, every sentence read by both voices. For v1 it read
+14,600 more clips from their spoken forms (14,047 kept), and v1 trains on
+26,130 clips (28 hours). The two voices are clones
 of two Common Voice speakers; the short reference recordings are the only real
 human audio in the pipeline and they are not part of the model.
 
@@ -42,6 +46,13 @@ See [docs/model.md](docs/model.md) for the full architecture and data
 description, and [docs/annotations.md](docs/annotations.md) for the letter
 durations (forced alignment with a Portuguese wav2vec 2.0 model, used only to
 label the training data).
+
+## Versions
+
+v1 is the current release. It fixes what v0 read wrongly (English loanwords,
+symbols, money, dates, acronyms) and makes unvoiced sounds from noise; on the
+probe suite, missed keywords fell from 242 to 18 of 574. See
+[docs/v1.md](docs/v1.md). The v0 release is tagged `v0`.
 
 ## Usage
 
@@ -70,7 +81,7 @@ the model and the front end entirely client-side.
 | Path | Contents |
 |---|---|
 | `src/tiny_broca/` | Front end, model, data, alignment, training, evaluation, export |
-| `data/corpus/` | The 9,384-sentence text corpus (Parquet, three batches) |
+| `data/corpus/` | The text corpus (Parquet, five batches) |
 | `data/voices/`, `data/pilot/` | Voice references and pilot recordings |
 | `scripts/` | Corpus builder, voice design, audio generation |
 | `docs/` | Model and data description, annotation format, HF cards |
